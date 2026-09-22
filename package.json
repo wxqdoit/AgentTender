@@ -1,0 +1,27 @@
+{
+  "name": "agent-tender-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Autonomous Reverse-Auction & Machine Commerce Tender Protocol for Arc & Circle USDC",
+  "scripts": {
+    "test:contracts": "export PATH=\"$HOME/.foundry/bin:$PATH\" && cd contracts && forge test -vvv",
+    "test:e2e": "cd backend && pnpm tsx src/full-system-test.ts",
+    "test": "pnpm test:contracts && pnpm test:e2e",
+    "build:contracts": "export PATH=\"$HOME/.foundry/bin:$PATH\" && cd contracts && forge build",
+    "build:backend": "cd backend && pnpm tsc --noEmit",
+    "build:frontend": "cd frontend && pnpm build",
+    "build": "pnpm build:contracts && pnpm build:backend && pnpm build:frontend",
+    "dev:backend": "cd backend && pnpm tsx src/index.ts",
+    "dev:frontend": "cd frontend && pnpm dev"
+  },
+  "keywords": [
+    "arc",
+    "usdc",
+    "ai-agents",
+    "machine-commerce",
+    "reverse-auction",
+    "smart-contracts"
+  ],
+  "author": "",
+  "license": "MIT"
+}

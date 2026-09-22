@@ -1,0 +1,775 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_usdc",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "BPS_DENOMINATOR",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "CHALLENGE_WINDOW_SECONDS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_ABSOLUTE_DECREMENT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_AGENT_STAKE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_PERCENT_DECREMENT_BPS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cancelTender",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claimPayout",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "confirmDelivery",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createTender",
+    "inputs": [
+      {
+        "name": "taskMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "maxBudget",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "biddingWindowSeconds",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "executionWindowSeconds",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "depositStake",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getStake",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTender",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct AgentTender.Tender",
+        "components": [
+          {
+            "name": "id",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "creator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "taskMetadataURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "maxBudget",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "currentLowestBid",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lowestBidder",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "biddingDeadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "executionDeadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "challengePeriodEnd",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum AgentTender.TenderStatus"
+          },
+          {
+            "name": "deliveryPayload",
+            "type": "string",
+            "internalType": "string"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTenderCurrentStatus",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum AgentTender.TenderStatus"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "handleBiddingTimeout",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "handleExecutionTimeout",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isQualifiedAgent",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "stakes",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "submitBid",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "bidAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "submitDelivery",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deliveryPayload",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tenderCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tenders",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "taskMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "maxBudget",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "currentLowestBid",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "lowestBidder",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "biddingDeadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "executionDeadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "challengePeriodEnd",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "status",
+        "type": "uint8",
+        "internalType": "enum AgentTender.TenderStatus"
+      },
+      {
+        "name": "deliveryPayload",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "usdc",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "withdrawStake",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "DeliverySubmitted",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "payload",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "challengePeriodEnd",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "NewLowestBid",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "bidder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "bidAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "previousLowestBid",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "StakeDeposited",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newTotalStake",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "StakeWithdrawn",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "remainingStake",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TenderAwarded",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "winningBid",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TenderCancelled",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "refundedBudget",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TenderCreated",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "maxBudget",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "biddingDeadline",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "executionDeadline",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "taskMetadataURI",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TenderExecutionFailed",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "slasheee",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "slashedAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "totalCompensated",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TenderSettled",
+    "inputs": [
+      {
+        "name": "tenderId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "payout",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "refundToCreator",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SafeERC20FailedOperation",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  }
+]

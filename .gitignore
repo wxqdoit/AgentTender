@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# macOS
+.DS_Store
+
+# Foundry
+contracts/out
+contracts/cache
+contracts/broadcast
+contracts/foundry-pp
+
+# Next.js
+frontend/.next
+frontend/out
+
+# Build artifacts
+dist
+*.log
+
+# Env files (keep template or sample)
+.env.local
+*.rej
+*.orig
