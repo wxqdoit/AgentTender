@@ -27,6 +27,15 @@ export const DICTIONARY = {
     wallet_reown: 'Reown',
     wallet_connect: 'Connect Wallet',
     wallet_disconnect: 'Disconnect',
+    network_label: 'Network',
+    gas_label: 'Gas Token',
+    gas_val: 'Native USDC',
+    faucet_link: 'Get Testnet USDC (Faucet)',
+    copy_address: 'Copy Address',
+    address_copied: 'Address Copied',
+    view_explorer: 'View on ArcScan ↗',
+    manage_wallet: 'Manage in Reown Modal',
+    refresh_balance: 'Refresh Balance',
 
     // Creator Form
     create_title: 'Create Reverse Tender',
@@ -192,6 +201,15 @@ export const DICTIONARY = {
     wallet_reown: 'Reown',
     wallet_connect: '连接钱包',
     wallet_disconnect: '断开连接',
+    network_label: '当前网络',
+    gas_label: 'Gas 燃料',
+    gas_val: '原生 USDC',
+    faucet_link: '官方领水 (USDC Faucet) ↗',
+    copy_address: '复制完整地址',
+    address_copied: '地址已复制',
+    view_explorer: '在 ArcScan 浏览器查看 ↗',
+    manage_wallet: '管理钱包 (Reown)',
+    refresh_balance: '刷新余额',
 
     // Creator Form
     create_title: '发起逆向招标',

@@ -20,6 +20,11 @@ import {
   Coins,
   LogOut,
   Menu,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+  RefreshCw,
+  Cpu,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '../lib/i18n';
@@ -32,6 +37,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
@@ -57,6 +64,7 @@ export function Header({
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
   const {
     activeAddress,
     isConnected,
@@ -66,6 +74,20 @@ export function Header({
 
   const handleFaucet = () => {
     window.open('https://faucet.testnet.arc.network', '_blank');
+  };
+
+  const handleCopyAddress = () => {
+    if (activeAddress) {
+      navigator.clipboard.writeText(activeAddress);
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 2000);
+    }
+  };
+
+  const handleOpenExplorer = () => {
+    if (activeAddress) {
+      window.open(`https://testnet.arcscan.app/address/${activeAddress}`, '_blank');
+    }
   };
 
   const navItems = [
@@ -122,67 +144,129 @@ export function Header({
           </nav>
         </div>
 
-        {/* Center: Live Arc Network Telemetry */}
-        <div className="hidden 2xl:flex items-center gap-2 font-mono text-[11px] text-muted-foreground shrink-0">
-          <Badge variant="outline" className="gap-1.5 py-0.5 px-2.5 bg-secondary/50 font-mono border-border whitespace-nowrap shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span className="text-foreground">{t('network_arc')}</span>
-            <span className="text-muted-foreground">#{blockNumber || '---'}</span>
-          </Badge>
-          <Badge variant="outline" className="gap-1.5 py-0.5 px-2.5 bg-secondary/50 font-mono border-border whitespace-nowrap shrink-0">
-            <Coins className="w-3 h-3 text-primary shrink-0" />
-            <span>{t('gas_native')}</span>
-          </Badge>
-        </div>
-
-        {/* Right: Controls & Wallet */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Faucet Link */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleFaucet}
-            className="h-8 px-2 sm:px-2.5 text-xs font-mono border-border hover:border-primary/50 text-foreground bg-secondary/40 hover:bg-secondary whitespace-nowrap shrink-0"
-          >
-            <Droplets className="w-3.5 h-3.5 mr-1 text-primary shrink-0" />
-            <span>{t('faucet_btn')}</span>
-          </Button>
-
-          {/* User USDC Balance */}
-          {isConnected && (
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="hidden sm:flex items-center h-8 px-2.5 rounded-md bg-secondary text-xs font-mono border border-border whitespace-nowrap shrink-0"
-            >
-              <span className="text-muted-foreground mr-1.5">USDC:</span>
-              <span className="font-bold text-foreground tabular-nums">{formatUSDC(userBalance)}</span>
-            </motion.div>
-          )}
-
-          {/* Reown AppKit Wallet Button */}
+        {/* Right: Consolidated Account Dropdown & Controls */}
+        <div className="flex items-center gap-2 shrink-0">
           {isConnected ? (
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={openReownModal}
-                className="h-8 px-2.5 text-xs font-mono border-border text-foreground hover:border-primary/50 bg-secondary/30 shrink-0"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 shrink-0" />
-                <span>{shortAddr}</span>
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={disconnectReown}
-                title={t('wallet_disconnect')}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+            /* Consolidated Web3 Account Dropdown */
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2.5 text-xs font-mono border-border text-foreground hover:border-primary/50 bg-secondary/30 shrink-0 gap-2 transition-colors"
+                >
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="font-semibold">{shortAddr}</span>
+                  <div className="hidden sm:flex items-center gap-1 pl-1.5 border-l border-border/80 text-muted-foreground">
+                    <span className="text-[10px]">USDC:</span>
+                    <span className="text-foreground font-bold tabular-nums">{formatUSDC(userBalance)}</span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-70 ml-0.5 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-72 font-mono text-xs border border-border bg-popover p-2 space-y-2 shadow-lg">
+                {/* Account & Balance Section */}
+                <div className="p-2.5 rounded-md bg-secondary/40 border border-border space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>{t('balance')}</span>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRefreshBalance();
+                      }}
+                      className="h-5 px-1 text-[10px] text-muted-foreground hover:text-foreground gap-1"
+                      title={t('refresh_balance')}
+                    >
+                      <RefreshCw className="w-2.5 h-2.5" />
+                      <span>{t('refresh_balance')}</span>
+                    </Button>
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-lg font-black text-foreground tabular-nums">
+                      {formatUSDC(userBalance)}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
+                      USDC
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-border/60 text-[10px] text-muted-foreground">
+                    <span className="truncate max-w-[180px] font-mono select-all">
+                      {activeAddress}
+                    </span>
+                    <button
+                      onClick={handleCopyAddress}
+                      className="hover:text-foreground text-primary flex items-center gap-1 cursor-pointer shrink-0"
+                    >
+                      {addressCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                      <span>{addressCopied ? t('address_copied') : t('copy')}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Network & Gas Details */}
+                <div className="px-2 py-1 space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {t('network_label')}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {t('network_arc')} {blockNumber ? `#${blockNumber}` : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Coins className="w-3 h-3 text-primary" />
+                      {t('gas_label')}
+                    </span>
+                    <span className="font-semibold text-foreground">{t('gas_val')}</span>
+                  </div>
+                </div>
+
+                <DropdownMenuSeparator />
+
+                {/* Action Links */}
+                <DropdownMenuItem
+                  onClick={handleFaucet}
+                  className="flex items-center gap-2 cursor-pointer text-xs"
+                >
+                  <Droplets className="w-3.5 h-3.5 text-primary" />
+                  <span className="flex-1">{t('faucet_link')}</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={handleOpenExplorer}
+                  className="flex items-center gap-2 cursor-pointer text-xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="flex-1">{t('view_explorer')}</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={openReownModal}
+                  className="flex items-center gap-2 cursor-pointer text-xs"
+                >
+                  <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="flex-1">{t('manage_wallet')}</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {/* Disconnect */}
+                <DropdownMenuItem
+                  onClick={disconnectReown}
+                  className="flex items-center gap-2 cursor-pointer text-xs text-destructive focus:bg-destructive/10 focus:text-destructive"
+                >
+                  <LogOut className="w-3.5 h-3.5 text-destructive" />
+                  <span>{t('wallet_disconnect')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
+            /* Connect Button */
             <Button
               size="sm"
               variant="default"
@@ -229,13 +313,13 @@ export function Header({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-28 font-mono text-xs border border-border">
               <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer">
-                Light
+                {t('theme_light')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer">
-                Dark
+                {t('theme_dark')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTheme('system')} className="cursor-pointer">
-                System
+                {t('theme_system')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
