@@ -14,6 +14,8 @@ import { publishTender, fetchUSDCBalance } from '../../lib/web3';
 import { formatUSDC } from '../../lib/utils';
 import { useLanguage } from '../../lib/i18n';
 import { useWallet } from '../../components/ReownProvider';
+import { toast } from 'sonner';
+import { formatWeb3Error } from '../../lib/error';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -92,7 +94,7 @@ export default function CreateTenderPage() {
       return;
     }
     if (!prompt.trim() || budget < 0.001) {
-      alert('Minimum budget must be at least 0.001 USDC');
+      toast.warning('最高限额必须大于或等于 0.001 USDC');
       return;
     }
 
@@ -115,7 +117,7 @@ export default function CreateTenderPage() {
       }, 1000);
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message || err}`);
+      toast.error(`发布招标失败: ${formatWeb3Error(err)}`);
       setStatusMessage(null);
     } finally {
       setIsSubmitting(false);
@@ -131,7 +133,7 @@ export default function CreateTenderPage() {
       />
 
       <motion.main
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
         className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 sm:px-6 space-y-6"

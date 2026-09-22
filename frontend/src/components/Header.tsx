@@ -51,14 +51,14 @@ import {
 
 interface HeaderProps {
   blockNumber?: number | string;
-  userBalance: number;
-  onRefreshBalance: () => void;
+  userBalance?: number;
+  onRefreshBalance?: () => void;
 }
 
 export function Header({
   blockNumber,
-  userBalance,
-  onRefreshBalance,
+  userBalance: propUserBalance,
+  onRefreshBalance: propOnRefreshBalance,
 }: HeaderProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -68,9 +68,14 @@ export function Header({
   const {
     activeAddress,
     isConnected,
+    userBalance: globalUserBalance,
+    refreshBalance: globalRefreshBalance,
     openReownModal,
     disconnectReown,
   } = useWallet();
+
+  const userBalance = propUserBalance !== undefined ? propUserBalance : globalUserBalance;
+  const onRefreshBalance = propOnRefreshBalance || globalRefreshBalance;
 
   const handleFaucet = () => {
     window.open('https://faucet.testnet.arc.network', '_blank');
@@ -128,11 +133,7 @@ export function Header({
                   }`}
                 >
                   {isActive && (
-                    <motion.div
-                      layoutId="navIndicator"
-                      className="absolute inset-0 rounded-md bg-secondary border border-border"
-                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                    />
+                    <div className="absolute inset-0 rounded-md bg-secondary border border-border" />
                   )}
                   <span className="relative z-10 flex items-center gap-1.5">
                     <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-primary' : ''}`} />

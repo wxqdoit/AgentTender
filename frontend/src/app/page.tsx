@@ -146,7 +146,7 @@ function HomeContent() {
         onRefreshBalance={refreshBalance}
       />
 
-      <motion.main initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-5">
+      <motion.main initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-5">
         {/* Core 2-Column Responsive Workspace: Live Arena (7 cols) + Telemetry Logs (5 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Main Bidding Arena (7 cols) */}

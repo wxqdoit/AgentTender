@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect, useCallback } from 'react';
 import { WagmiProvider, useAccount, useDisconnect, useConnect, injected } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createAppKit, useAppKit } from '@reown/appkit/react';
@@ -8,6 +8,7 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { arcTestnet, arc } from '@reown/appkit/networks';
 import { defineChain, http, type Address } from 'viem';
 import { CONFIG } from '../config';
+import { fetchUSDCBalance } from '../lib/web3';
 
 // Define local Devnet if needed
 export const arcDevnet = defineChain({
@@ -65,6 +66,8 @@ createAppKit({
 interface WalletContextType {
   activeAddress?: Address;
   isConnected: boolean;
+  userBalance: number;
+  refreshBalance: () => Promise<void>;
   openReownModal: () => Promise<void>;
   disconnectReown: () => void;
 }
@@ -77,9 +80,31 @@ function WalletManager({ children }: { children: React.ReactNode }) {
   const { connect, connectors } = useConnect();
   const appKit = useAppKit();
 
+  const [userBalance, setUserBalance] = useState<number>(0);
+
   const activeAddress: Address | undefined = useMemo(() => {
     return address as Address | undefined;
   }, [address]);
+
+  // Global persistent balance refresh that does NOT flicker or reset to 0 on route navigation
+  const refreshBalance = useCallback(async () => {
+    if (activeAddress) {
+      try {
+        const bal = await fetchUSDCBalance(activeAddress);
+        setUserBalance(bal);
+      } catch (e) {
+        console.warn('Balance sync error:', e);
+      }
+    } else {
+      setUserBalance(0);
+    }
+  }, [activeAddress]);
+
+  useEffect(() => {
+    refreshBalance();
+    const interval = setInterval(refreshBalance, 10000);
+    return () => clearInterval(interval);
+  }, [refreshBalance]);
 
   const handleOpenWallet = async () => {
     try {
@@ -108,8 +133,13 @@ function WalletManager({ children }: { children: React.ReactNode }) {
       value={{
         activeAddress,
         isConnected,
+        userBalance,
+        refreshBalance,
         openReownModal: handleOpenWallet,
-        disconnectReown: () => disconnect(),
+        disconnectReown: () => {
+          disconnect();
+          setUserBalance(0);
+        },
       }}
     >
       {children}

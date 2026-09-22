@@ -22,6 +22,8 @@ import {
   depositStakeOnChain,
   withdrawStakeOnChain,
 } from '../../lib/web3';
+import { toast } from 'sonner';
+import { formatWeb3Error } from '../../lib/error';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
@@ -85,20 +87,18 @@ export default function StakeVaultPage() {
     }
     const val = parseFloat(depositAmount);
     if (!val || val < 0.001) {
-      alert('Minimum stake deposit is 0.001 USDC');
+      toast.warning('最低质押金额不能小于 0.001 USDC');
       return;
     }
 
+    const toastId = toast.loading('正在向 Arc L1 存入质押保证金...');
     try {
       setIsDepositing(true);
-      setStatusMsg('Depositing stake on Arc L1...');
       await depositStakeOnChain(val);
-      setStatusMsg('Stake successfully deposited!');
+      toast.success(`成功质押 ${val} USDC 到 StakeVault！`, { id: toastId });
       await refreshState();
-      setTimeout(() => setStatusMsg(null), 3000);
     } catch (err: any) {
-      alert(`Deposit failed: ${err.message || err}`);
-      setStatusMsg(null);
+      toast.error(`存入保证金失败: ${formatWeb3Error(err)}`, { id: toastId });
     } finally {
       setIsDepositing(false);
     }
@@ -111,18 +111,19 @@ export default function StakeVaultPage() {
       return;
     }
     const val = parseFloat(withdrawAmount);
-    if (!val || val < 0.001 || val > userStake) return;
+    if (!val || val < 0.001 || val > userStake) {
+      toast.warning('提现金额不合法或超出当前已质押额度');
+      return;
+    }
 
+    const toastId = toast.loading('正在从 Arc L1 提取质押保证金...');
     try {
       setIsWithdrawing(true);
-      setStatusMsg('Withdrawing stake from Arc L1...');
       await withdrawStakeOnChain(val);
-      setStatusMsg('Stake successfully withdrawn!');
+      toast.success(`成功提取 ${val} USDC 质押金！`, { id: toastId });
       await refreshState();
-      setTimeout(() => setStatusMsg(null), 3000);
     } catch (err: any) {
-      alert(`Withdraw failed: ${err.message || err}`);
-      setStatusMsg(null);
+      toast.error(`提取保证金失败: ${formatWeb3Error(err)}`, { id: toastId });
     } finally {
       setIsWithdrawing(false);
     }
@@ -139,7 +140,7 @@ export default function StakeVaultPage() {
       />
 
       <motion.main
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
         className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6"

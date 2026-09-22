@@ -434,9 +434,9 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                 {tender.bids.map((bid, idx) => (
                   <motion.div
                     key={`${bid.bidder}_${bid.bidAmount}_${idx}`}
-                    initial={{ opacity: 0, x: -12, scale: 0.98 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 12 }}
+                    initial={{ opacity: 0, y: 4, scale: 0.99 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.2, ease: 'easeOut' }}
                     className="flex items-center justify-between px-3 py-1.5 rounded-md bg-secondary/50 border border-border text-xs font-mono hover:bg-secondary/70 transition-colors"
                   >

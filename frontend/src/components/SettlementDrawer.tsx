@@ -15,6 +15,8 @@ import { useLanguage } from '../lib/i18n';
 import { useWallet } from './ReownProvider';
 import { formatUSDC } from '../lib/utils';
 import { confirmDeliveryOnChain, claimPayoutOnChain } from '../lib/web3';
+import { toast } from 'sonner';
+import { formatWeb3Error } from '../lib/error';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -72,7 +74,7 @@ export function SettlementDrawer({
       onRefreshBalance();
     } catch (err: any) {
       console.error(err);
-      alert(`Confirmation failed: ${err.message || err}`);
+      toast.error(`确认交付失败: ${formatWeb3Error(err)}`);
     } finally {
       setIsConfirming(false);
     }
@@ -90,7 +92,7 @@ export function SettlementDrawer({
       onRefreshBalance();
     } catch (err: any) {
       console.error(err);
-      alert(`Claim failed: ${err.message || err}`);
+      toast.error(`提取报酬失败: ${formatWeb3Error(err)}`);
     } finally {
       setIsClaiming(false);
     }

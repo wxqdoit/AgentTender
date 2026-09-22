@@ -5,6 +5,8 @@ import { Sparkles, Shield, Send, ArrowRight, Zap, CheckCircle } from 'lucide-rea
 import { publishTender } from '../lib/web3';
 import { useLanguage } from '../lib/i18n';
 import { useWallet } from './ReownProvider';
+import { toast } from 'sonner';
+import { formatWeb3Error } from '../lib/error';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -66,7 +68,7 @@ export function TenderCreator({
       return;
     }
     if (!prompt.trim() || budget < 0.001) {
-      alert('Minimum budget must be at least 0.001 USDC');
+      toast.warning('最高限额必须大于或等于 0.001 USDC');
       return;
     }
 
@@ -91,7 +93,7 @@ export function TenderCreator({
       }, 3000);
     } catch (err: any) {
       console.error(err);
-      alert(`Error publishing tender: ${err.message || err}`);
+      toast.error(`发布招标失败: ${formatWeb3Error(err)}`);
       setStatusMessage(null);
     } finally {
       setIsSubmitting(false);
