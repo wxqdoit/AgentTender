@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, Shield, Send, ArrowRight, Zap, CheckCircle } from 'lucide-react';
+import { Sparkles, Shield, ArrowRight, Zap } from 'lucide-react';
 import { publishTender } from '../lib/web3';
 import { useLanguage } from '../lib/i18n';
 import { useWallet } from './ReownProvider';
@@ -15,17 +15,13 @@ import { Badge } from './ui/badge';
 
 interface TenderCreatorProps {
   onTenderPublished: (tenderId: number) => void;
-  onRefreshBalance: () => void;
-  userBalance: number;
 }
 
 export function TenderCreator({
   onTenderPublished,
-  onRefreshBalance,
-  userBalance,
 }: TenderCreatorProps) {
-  const { t } = useLanguage();
-  const { isConnected, openReownModal } = useWallet();
+  const { t, language } = useLanguage();
+  const { isConnected, openReownModal, refreshBalance } = useWallet();
 
   const [prompt, setPrompt] = useState('');
   const [budget, setBudget] = useState(0.01);
@@ -37,27 +33,27 @@ export function TenderCreator({
   const presets = [
     {
       title: t('preset_audit'),
-      desc: 'Verify reentrancy and arithmetic safety invariants on AgentTender.sol contract logic.',
+      desc: t('preset_audit_desc'),
       budget: 0.01,
       bidWin: 35,
       execWin: 45,
-      prompt: 'Verify reentrancy and arithmetic safety invariants on AgentTender.sol contract logic.',
+      prompt: t('preset_audit_prompt'),
     },
     {
       title: t('preset_financial'),
-      desc: 'Execute arbitrage triangular scan across Uniswap v3 USDC/ETH pools on Arc L1.',
+      desc: t('preset_financial_desc'),
       budget: 0.005,
       bidWin: 30,
       execWin: 40,
-      prompt: 'Execute arbitrage triangular scan across Uniswap v3 USDC/ETH pools on Arc L1.',
+      prompt: t('preset_financial_prompt'),
     },
     {
       title: t('preset_synthesis'),
-      desc: 'Aggregate 10,000 block transactions to compute Gini index for Arc decentralization metrics.',
+      desc: t('preset_synthesis_desc'),
       budget: 0.02,
       bidWin: 45,
       execWin: 60,
-      prompt: 'Aggregate 10,000 block transactions to compute Gini index for Arc decentralization metrics.',
+      prompt: t('preset_synthesis_prompt'),
     },
   ];
 
@@ -68,7 +64,7 @@ export function TenderCreator({
       return;
     }
     if (!prompt.trim() || budget < 0.001) {
-      toast.warning('最高限额必须大于或等于 0.001 USDC');
+      toast.warning(t('create_min_budget_warn'));
       return;
     }
 
@@ -85,7 +81,7 @@ export function TenderCreator({
 
       setStatusMessage(`${t('published_success')} #${result.tenderId}`);
       onTenderPublished(result.tenderId);
-      onRefreshBalance();
+      refreshBalance();
 
       setTimeout(() => {
         setStatusMessage(null);
@@ -93,7 +89,7 @@ export function TenderCreator({
       }, 3000);
     } catch (err: any) {
       console.error(err);
-      toast.error(`发布招标失败: ${formatWeb3Error(err)}`);
+      toast.error(`${t('create_publish_fail')}: ${formatWeb3Error(err, language)}`);
       setStatusMessage(null);
     } finally {
       setIsSubmitting(false);

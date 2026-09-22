@@ -1,35 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Bot, Zap, Trophy, DollarSign, ShieldCheck, Cpu, Code2, CheckCircle2, Radio } from 'lucide-react';
-import { Header } from '../../components/Header';
 import { AgentProfile } from '../../types';
 import { CONFIG } from '../../config';
 import { useLanguage } from '../../lib/i18n';
 import { useWallet } from '../../components/ReownProvider';
-import { fetchUSDCBalance } from '../../lib/web3';
 import { formatUSDC } from '../../lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 
 export default function AgentsPage() {
-  const { t } = useLanguage();
+  const { t, localizeStrategyDescription } = useLanguage();
   const { activeAddress } = useWallet();
 
   const [agents, setAgents] = useState<AgentProfile[]>([]);
-  const [userBalance, setUserBalance] = useState<number>(0);
   const [blockNumber, setBlockNumber] = useState<string>('');
 
-  const refreshBalance = async () => {
-    if (activeAddress) {
-      const bal = await fetchUSDCBalance(activeAddress);
-      setUserBalance(bal);
-    }
-  };
-
   useEffect(() => {
-    refreshBalance();
     const fetchFleet = async () => {
       try {
         const [aRes, hRes] = await Promise.all([
@@ -52,19 +40,9 @@ export default function AgentsPage() {
   const totalMissions = agents.reduce((acc, a) => acc + (a.totalWins || 0), 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background font-mono">
-      <Header
-        blockNumber={blockNumber}
-        userBalance={userBalance}
-        onRefreshBalance={refreshBalance}
-      />
+    <div className="flex-1 flex flex-col">
 
-      <motion.main
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6"
-      >
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
@@ -91,7 +69,7 @@ export default function AgentsPage() {
             </div>
             <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
-              100% Qualified &amp; Staked
+              {t('agents_100_qualified')}
             </span>
           </Card>
 
@@ -108,7 +86,7 @@ export default function AgentsPage() {
             <div className="my-1 text-2xl font-bold text-foreground tabular-nums">
               {formatUSDC(totalVolume)} <span className="text-xs font-normal text-muted-foreground">USDC</span>
             </div>
-            <span className="text-[10px] text-emerald-500 font-semibold">Atomic Settled</span>
+            <span className="text-[10px] text-emerald-500 font-semibold">{t('agents_atomic_settled')}</span>
           </Card>
 
           <Card className="border border-border bg-card p-4 rounded-lg shadow-sm flex flex-col justify-between">
@@ -143,7 +121,7 @@ export default function AgentsPage() {
                 </div>
 
                 <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-500 bg-emerald-500/10 shrink-0">
-                  Qualified
+                  {t('qualified_badge')}
                 </Badge>
               </CardHeader>
 
@@ -156,7 +134,7 @@ export default function AgentsPage() {
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] text-muted-foreground uppercase font-bold">{t('strategy')}:</span>
                   <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
-                    {agent.strategy.description}
+                    {localizeStrategyDescription(agent.strategy.description)}
                   </p>
                 </div>
 
@@ -209,7 +187,7 @@ export default function AgentsPage() {
             TargetBid = max(Cost_compute + Cost_gas + Floor_margin, CurrentLowestBid - StepDecrement)
           </div>
         </Card>
-      </motion.main>
+      </main>
     </div>
   );
 }

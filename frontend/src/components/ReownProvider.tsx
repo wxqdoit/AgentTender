@@ -68,7 +68,7 @@ interface WalletContextType {
   isConnected: boolean;
   userBalance: number;
   refreshBalance: () => Promise<void>;
-  openReownModal: () => Promise<void>;
+  openReownModal: (view?: 'Account' | 'Connect' | 'Networks') => Promise<void>;
   disconnectReown: () => void;
 }
 
@@ -80,11 +80,21 @@ function WalletManager({ children }: { children: React.ReactNode }) {
   const { connect, connectors } = useConnect();
   const appKit = useAppKit();
 
-  const [userBalance, setUserBalance] = useState<number>(0);
-
   const activeAddress: Address | undefined = useMemo(() => {
     return address as Address | undefined;
   }, [address]);
+
+  // Read initial balance from localStorage to prevent any reset to 0 upon route switching or mount
+  const [userBalance, setUserBalance] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('agent_tender_usdc_bal');
+      if (cached) {
+        const val = parseFloat(cached);
+        if (!isNaN(val)) return val;
+      }
+    }
+    return 0;
+  });
 
   // Global persistent balance refresh that does NOT flicker or reset to 0 on route navigation
   const refreshBalance = useCallback(async () => {
@@ -92,22 +102,53 @@ function WalletManager({ children }: { children: React.ReactNode }) {
       try {
         const bal = await fetchUSDCBalance(activeAddress);
         setUserBalance(bal);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('agent_tender_usdc_bal', String(bal));
+          localStorage.setItem(`agent_tender_usdc_bal_${activeAddress.toLowerCase()}`, String(bal));
+        }
       } catch (e) {
         console.warn('Balance sync error:', e);
       }
     } else {
       setUserBalance(0);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('agent_tender_usdc_bal');
+      }
     }
   }, [activeAddress]);
 
+  // When activeAddress changes, check if we have a cached balance for this specific address
   useEffect(() => {
+    if (activeAddress && typeof window !== 'undefined') {
+      const cached = localStorage.getItem(`agent_tender_usdc_bal_${activeAddress.toLowerCase()}`);
+      if (cached) {
+        const val = parseFloat(cached);
+        if (!isNaN(val)) setUserBalance(val);
+      }
+    }
     refreshBalance();
-    const interval = setInterval(refreshBalance, 10000);
-    return () => clearInterval(interval);
-  }, [refreshBalance]);
+  }, [activeAddress, refreshBalance]);
 
-  const handleOpenWallet = async () => {
+  // Silent automatic background polling every 4 seconds without flickering
+  useEffect(() => {
+    if (!activeAddress) return;
+    const interval = setInterval(() => {
+      refreshBalance();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [activeAddress, refreshBalance]);
+
+  const handleOpenWallet = async (view?: 'Account' | 'Connect' | 'Networks') => {
     try {
+      if (view) {
+        await appKit.open({ view });
+        return;
+      }
+      if (isConnected) {
+        await appKit.open({ view: 'Account' });
+        return;
+      }
+      // If disconnected, try injected or open Connect modal
       if (typeof window !== 'undefined' && (window as any).ethereum) {
         const injectedConn = connectors.find((c) => c.id === 'injected') || connectors[0];
         if (injectedConn) {
@@ -115,11 +156,11 @@ function WalletManager({ children }: { children: React.ReactNode }) {
             await connect({ connector: injectedConn });
             return;
           } catch (connErr: any) {
-            console.warn('Direct injected connection prompt, falling back to modal:', connErr);
+            console.warn('Injected connection prompt error, opening modal:', connErr);
           }
         }
       }
-      await appKit.open();
+      await appKit.open({ view: 'Connect' });
     } catch (err) {
       console.warn('Wallet open error:', err);
       try {
@@ -139,6 +180,9 @@ function WalletManager({ children }: { children: React.ReactNode }) {
         disconnectReown: () => {
           disconnect();
           setUserBalance(0);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('agent_tender_usdc_bal');
+          }
         },
       }}
     >

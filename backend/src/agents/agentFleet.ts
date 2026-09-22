@@ -400,20 +400,16 @@ export class AgentFleet {
         onChainSucceeded = true;
       } catch (err: any) {
         const reason = err.shortMessage || err.message || '';
-        if (reason.includes('Bidding window expired')) {
-          indexer.addLog({
-            agentId: agent.profile.id,
-            agentName: agent.profile.name,
-            tenderId,
-            action: 'SKIP',
-            message: `Bidding window closed on-chain before TX inclusion.`,
-          });
-          return;
-        }
+        indexer.addLog({
+          agentId: agent.profile.id,
+          agentName: agent.profile.name,
+          tenderId,
+          action: 'SKIP',
+          message: `On-chain bid ${targetBid} USDC rejected: ${reason.slice(0, 60)}`,
+        });
+        return; // Invariant: If on-chain fails, never register bid
       }
     }
-
-    agent.profile.totalBids++;
 
     const bidRecord = {
       tenderId,
@@ -426,7 +422,13 @@ export class AgentFleet {
       marginPercent: agent.profile.strategy.margin * 100,
     };
 
-    indexer.registerBid(bidRecord);
+    const registered = indexer.registerBid(bidRecord);
+    if (!registered) {
+      // Duplicate or invalid price rejected by indexer
+      return;
+    }
+
+    agent.profile.totalBids++;
 
     indexer.addLog({
       agentId: agent.profile.id,

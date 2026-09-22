@@ -1,45 +1,33 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useCallback, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Header } from '../components/Header';
 import { LiveArena } from '../components/LiveArena';
 import { MachineLogsTerminal } from '../components/MachineLogsTerminal';
 import { SettlementDrawer } from '../components/SettlementDrawer';
-import { TenderData, AgentProfile, MachineLog } from '../types';
+import { TenderData, AgentProfile, MachineLog, TenderStatus, BidRecord } from '../types';
 import { CONFIG } from '../config';
-import { fetchUSDCBalance } from '../lib/web3';
-import { useWallet } from '../components/ReownProvider';
+import { useLanguage } from '../lib/i18n';
 
 function HomeContent() {
   const searchParams = useSearchParams();
   const queryTenderId = searchParams.get('tenderId');
 
-  const { activeAddress } = useWallet();
+  const { t } = useLanguage();
 
   const [tenders, setTenders] = useState<TenderData[]>([]);
-  const [activeTenderId, setActiveTenderId] = useState<number | null>(null);
   const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [logs, setLogs] = useState<MachineLog[]>([]);
   const [blockNumber, setBlockNumber] = useState<string>('');
-  const [userBalance, setUserBalance] = useState<number>(0);
+  const [userPinnedTenderId, setUserPinnedTenderId] = useState<number | null>(() => {
+    if (queryTenderId) {
+      const parsed = parseInt(queryTenderId, 10);
+      if (!isNaN(parsed)) return parsed;
+    }
+    return null;
+  });
 
   const wsRef = useRef<WebSocket | null>(null);
-
-  // Refresh user balance
-  const refreshBalance = useCallback(async () => {
-    if (activeAddress) {
-      const bal = await fetchUSDCBalance(activeAddress);
-      setUserBalance(bal);
-    }
-  }, [activeAddress]);
-
-  useEffect(() => {
-    refreshBalance();
-    const interval = setInterval(refreshBalance, 8000);
-    return () => clearInterval(interval);
-  }, [refreshBalance]);
 
   // Fetch state via REST
   const fetchState = useCallback(async () => {
@@ -51,17 +39,8 @@ function HomeContent() {
         fetch(`${CONFIG.BACKEND_URL}/api/health`).then((r) => r.json()),
       ]);
 
-      if (tendersRes.success) {
-        setTenders(tendersRes.data);
-        if (tendersRes.data.length > 0) {
-          setActiveTenderId((prev) => {
-            if (queryTenderId) {
-              const matched = tendersRes.data.find((t: any) => t.id === parseInt(queryTenderId, 10));
-              if (matched) return matched.id;
-            }
-            return prev !== null ? prev : tendersRes.data[0].id;
-          });
-        }
+      if (tendersRes.success && Array.isArray(tendersRes.data)) {
+        setTenders(tendersRes.data.sort((a: TenderData, b: TenderData) => b.id - a.id));
       }
       if (agentsRes.success) setAgents(agentsRes.data);
       if (logsRes.success) setLogs(logsRes.data);
@@ -69,7 +48,7 @@ function HomeContent() {
     } catch (err) {
       console.warn('REST sync error:', err);
     }
-  }, [queryTenderId]);
+  }, []);
 
   // WebSocket real-time subscription
   useEffect(() => {
@@ -88,24 +67,46 @@ function HomeContent() {
           try {
             const msg = JSON.parse(event.data);
             if (msg.type === 'INIT') {
-              setTenders(msg.data.tenders);
-              setAgents(msg.data.agents);
-              setLogs(msg.data.logs);
-              if (msg.data.tenders.length > 0) {
-                setActiveTenderId((prev) => (prev !== null ? prev : msg.data.tenders[0].id));
+              if (Array.isArray(msg.data.tenders)) {
+                setTenders(msg.data.tenders.sort((a: TenderData, b: TenderData) => b.id - a.id));
               }
+              if (Array.isArray(msg.data.agents)) setAgents(msg.data.agents);
+              if (Array.isArray(msg.data.logs)) setLogs(msg.data.logs);
             } else if (msg.type === 'TENDER_UPDATE') {
               const updated = msg.data as TenderData;
               setTenders((prev) => {
                 const idx = prev.findIndex((t) => t.id === updated.id);
+                let nextList: TenderData[];
                 if (idx >= 0) {
-                  const copy = [...prev];
-                  copy[idx] = updated;
-                  return copy;
+                  nextList = [...prev];
+                  nextList[idx] = updated;
+                } else {
+                  nextList = [updated, ...prev];
                 }
-                return [updated, ...prev];
+                return nextList.sort((a, b) => b.id - a.id);
               });
-              setActiveTenderId((prev) => (prev === null ? updated.id : prev));
+            } else if (msg.type === 'NEW_BID') {
+              const bid = msg.data as BidRecord;
+              setTenders((prev) => {
+                const idx = prev.findIndex((t) => t.id === bid.tenderId);
+                if (idx >= 0) {
+                  const nextList = [...prev];
+                  const current = { ...nextList[idx] };
+                  const exists = current.bids.some(
+                    (b) => b.timestamp === bid.timestamp && b.bidder === bid.bidder
+                  );
+                  if (!exists) {
+                    current.bids = [...current.bids, bid];
+                    current.currentLowestBid = bid.bidAmount;
+                    current.currentLowestBidRaw = bid.bidAmountRaw;
+                    current.lowestBidder = bid.bidder;
+                    current.lowestBidderName = bid.bidderName;
+                    nextList[idx] = current;
+                  }
+                  return nextList;
+                }
+                return prev;
+              });
             } else if (msg.type === 'LOG') {
               const newLog = msg.data as MachineLog;
               setLogs((prev) => [newLog, ...prev.slice(0, 199)]);
@@ -128,7 +129,7 @@ function HomeContent() {
     };
 
     connectWs();
-    const pollInterval = setInterval(fetchState, 8000);
+    const pollInterval = setInterval(fetchState, 5000);
 
     return () => {
       clearInterval(pollInterval);
@@ -136,17 +137,29 @@ function HomeContent() {
     };
   }, [fetchState]);
 
-  const activeTender = tenders.find((t) => t.id === activeTenderId) || tenders[0] || null;
+  // Dynamically resolve activeTender:
+  // 1. If pinned manually by user: use that specific tender.
+  // 2. Otherwise (Auto Live mode):
+  //    - Prioritize any currently OPEN (bidding) tender.
+  //    - Next, any DELIVERED tender awaiting challenge.
+  //    - Fallback to newest tender in list.
+  const activeTender = useMemo(() => {
+    if (userPinnedTenderId !== null) {
+      const pinned = tenders.find((t) => t.id === userPinnedTenderId);
+      if (pinned) return pinned;
+    }
+    const openTender = tenders.find((t) => t.status === TenderStatus.OPEN);
+    if (openTender) return openTender;
+
+    const deliveredTender = tenders.find((t) => t.status === TenderStatus.DELIVERED);
+    if (deliveredTender) return deliveredTender;
+
+    return tenders[0] || null;
+  }, [tenders, userPinnedTenderId]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header
-        blockNumber={blockNumber}
-        userBalance={userBalance}
-        onRefreshBalance={refreshBalance}
-      />
-
-      <motion.main initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-5">
+    <div className="flex-1 flex flex-col">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-5">
         {/* Core 2-Column Responsive Workspace: Live Arena (7 cols) + Telemetry Logs (5 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           {/* Main Bidding Arena (7 cols) */}
@@ -154,7 +167,8 @@ function HomeContent() {
             <LiveArena
               tender={activeTender}
               tendersList={tenders}
-              onSelectTender={setActiveTenderId}
+              isLiveAuto={userPinnedTenderId === null}
+              onSelectTender={(id) => setUserPinnedTenderId(id)}
             />
 
             {/* Compact Settlement & Delivery Verification Strip */}
@@ -162,7 +176,6 @@ function HomeContent() {
               <SettlementDrawer
                 tender={activeTender}
                 onSettled={fetchState}
-                onRefreshBalance={refreshBalance}
               />
             )}
           </div>
@@ -172,11 +185,11 @@ function HomeContent() {
             <MachineLogsTerminal logs={logs} />
           </div>
         </div>
-      </motion.main>
+      </main>
 
       {/* Clean Industrial Footer */}
       <footer className="border-t border-border py-4 px-6 text-center text-[11px] font-mono text-muted-foreground">
-        AgentTender &bull; Machine Commerce Reverse-Auction Protocol on Arc L1 &bull; Native USDC Gas
+        {t('footer_protocol')}
       </footer>
     </div>
   );

@@ -65,6 +65,17 @@ export class TenderIndexer extends EventEmitter {
   public registerBid(bid: BidRecord) {
     const tender = this.tenders.get(bid.tenderId);
     if (tender) {
+      // Invariant: Strictly forbid duplicate or non-undercutting bid prices
+      const isDuplicate = tender.bids.some((b) => Math.abs(b.bidAmount - bid.bidAmount) < 0.0001);
+      const isNotUndercutting = tender.bids.length > 0 && bid.bidAmount >= tender.currentLowestBid;
+
+      if (isDuplicate || isNotUndercutting) {
+        console.warn(
+          `[Indexer] Rejected invalid bid for tender #${bid.tenderId}: ${bid.bidAmount} USDC (Current lowest: ${tender.currentLowestBid}, Duplicate: ${isDuplicate})`
+        );
+        return false;
+      }
+
       tender.bids.push(bid);
       tender.currentLowestBid = bid.bidAmount;
       tender.currentLowestBidRaw = bid.bidAmountRaw;
@@ -72,7 +83,9 @@ export class TenderIndexer extends EventEmitter {
       tender.lowestBidderName = bid.bidderName;
       this.emit('tenderUpdated', tender);
       this.emit('newBid', bid);
+      return true;
     }
+    return false;
   }
 
   public updateTenderStatus(

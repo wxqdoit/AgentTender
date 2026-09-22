@@ -64,6 +64,9 @@ export const DICTIONARY = {
 
     // Live Arena
     arena_title: 'Live Bidding Arena',
+    live_auto_follow: '⚡ Live Bidding Auto-Track',
+    pinned_mode: 'Pinned to Tender',
+    resume_live: 'Resume Live Tracking',
     select_tender: 'Tender',
     bidding_countdown: 'Bidding Window',
     challenge_countdown: 'Challenge Window',
@@ -207,6 +210,67 @@ export const DICTIONARY = {
     docs_usdc_sub: 'Standard 6 Decimals',
     docs_contract_title: 'AgentTender Protocol Contract',
 
+
+    // Presets & Form details
+    preset_audit_desc: 'Verify reentrancy and arithmetic safety invariants on AgentTender.sol contract logic.',
+    preset_audit_prompt: 'Verify reentrancy and arithmetic safety invariants on AgentTender.sol contract logic.',
+    preset_financial_desc: 'Execute arbitrage triangular scan across Uniswap v3 USDC/ETH pools on Arc L1.',
+    preset_financial_prompt: 'Execute arbitrage triangular scan across Uniswap v3 USDC/ETH pools on Arc L1.',
+    preset_synthesis_desc: 'Aggregate 10,000 block transactions to compute Gini index for Arc decentralization metrics.',
+    preset_synthesis_prompt: 'Aggregate 10,000 block transactions to compute Gini index for Arc decentralization metrics.',
+    create_task_params: 'Task Parameters & Arc L1 Escrow',
+    create_subsecond: 'Sub-Second Clearing',
+    create_window_unit: 'Window',
+    create_select_preset: 'Select →',
+    create_escrow_note: 'Budget is locked on-chain in Arc official USDC. Lowest winning bidder receives cleared payout, excess is automatically refunded.',
+    create_min_budget_warn: 'Max budget must be at least 0.001 USDC',
+    create_publish_fail: 'Failed to publish tender',
+
+    // Settlement toasts
+    settlement_confirm_success: 'Delivery confirmed and payout released!',
+    settlement_confirm_fail: 'Failed to confirm delivery',
+    settlement_claim_success: 'Optimistic payout claimed successfully!',
+    settlement_claim_fail: 'Failed to claim payout',
+
+    // Explorer details
+    explorer_subtitle: 'Arc L1 Reverse-Auction Order Book • Verified On-Chain Micro-Tenders',
+    th_none: 'None',
+    modal_budget: 'Max Budget',
+    modal_winning_bid: 'Winning Bid',
+    modal_winner_node: 'Winner Node',
+    modal_delivery_payload: 'Delivery Payload:',
+
+    // Agents analytics
+    agents_100_qualified: '100% Qualified & Staked',
+    agents_atomic_settled: 'Atomic Settled',
+
+    // Vault actions & toasts
+    vault_withdraw_title: 'Withdraw Stake',
+    vault_withdraw_amount: 'Withdraw Amount (USDC)',
+    vault_withdrawing: 'Withdrawing...',
+    vault_agent_reserves: 'Agent Node Staked Reserves',
+    vault_qualified_active: 'QUALIFIED / ACTIVE',
+    max_btn: 'MAX',
+    vault_deposit_loading: 'Depositing stake to Arc L1 StakeVault...',
+    vault_deposit_success: 'Successfully staked to StakeVault!',
+    vault_deposit_fail: 'Failed to deposit stake',
+    vault_withdraw_loading: 'Withdrawing stake from Arc L1...',
+    vault_withdraw_success: 'Successfully withdrawn stake!',
+    vault_withdraw_fail: 'Failed to withdraw stake',
+    vault_min_stake_warn: 'Minimum stake amount is 0.001 USDC',
+    vault_invalid_withdraw_warn: 'Invalid withdrawal amount or exceeds current staked balance',
+
+    // Footer
+    footer_protocol: 'AgentTender • Machine Commerce Reverse-Auction Protocol on Arc L1 • Native USDC Gas',
+
+    create_escrow_breakdown: 'Escrow & Settlement Breakdown',
+    create_guarantee_title: 'Arc L1 Settlement Invariants',
+    create_guarantee_desc: 'Non-custodial reverse auction with atomic Circle USDC release on Arc L1.',
+    create_challenge_window: '15s Optimistic Challenge Window',
+    create_challenge_desc: 'Any node can submit cryptographic dispute proofs during the 15-second verification period.',
+    create_slashing_title: 'Automatic Slashing Invariant',
+    create_slashing_desc: 'If the winning agent fails to fulfill the task within the execution window, their 0.01 USDC stake is automatically slashed and transferred to your account as compensation.',
+
     // Theme
     theme_light: 'Light',
     theme_dark: 'Dark',
@@ -270,6 +334,9 @@ export const DICTIONARY = {
 
     // Live Arena
     arena_title: '实时机器竞价大厅',
+    live_auto_follow: '⚡ 实时动态跟踪 (自动)',
+    pinned_mode: '已锁定查看单号',
+    resume_live: '恢复实时跟踪',
     select_tender: '招标单',
     bidding_countdown: '竞价倒计时',
     challenge_countdown: '乐观交割期',
@@ -413,6 +480,67 @@ export const DICTIONARY = {
     docs_usdc_sub: '官方标准 6 精度代币',
     docs_contract_title: 'AgentTender 协议核心主合约',
 
+
+    // Presets & Form details
+    preset_audit_desc: '针对 AgentTender.sol 核心合约进行形式化验证与安全不变量审计。',
+    preset_audit_prompt: '针对 AgentTender.sol 核心合约进行形式化验证与防重入安全审计。',
+    preset_financial_desc: '在 Arc L1 链上针对 USDC/ETH 池进行三角套利与滑点机会监控扫描。',
+    preset_financial_prompt: '在 Arc L1 链上针对 Uniswap v3 USDC/ETH 池进行三角套利与滑点机会监控扫描。',
+    preset_synthesis_desc: '聚合 10,000 个区块交易数据，计算 Arc L1 去中心化基尼系数指标。',
+    preset_synthesis_prompt: '聚合 10,000 个区块交易数据，计算 Arc L1 去中心化基尼系数指标。',
+    create_task_params: '任务参数设定与 Arc 链上托管',
+    create_subsecond: '亚秒级原子清算',
+    create_window_unit: '窗口',
+    create_select_preset: '选择模板 →',
+    create_escrow_note: '招标预算将在 Arc 链上由官方 USDC 智能合约锁定托管。中标节点获得清算款项，剩余差额资金自动原路退还需求方。',
+    create_min_budget_warn: '最高限额必须大于或等于 0.001 USDC',
+    create_publish_fail: '发布招标失败',
+
+    // Settlement toasts
+    settlement_confirm_success: '交付成果已确认，款项已成功释放！',
+    settlement_confirm_fail: '确认交付失败',
+    settlement_claim_success: '乐观期免许可提款成功！',
+    settlement_claim_fail: '提取报酬失败',
+
+    // Explorer details
+    explorer_subtitle: 'Arc L1 链上微型逆向拍卖订单簿 • 验证全生命周期任务单',
+    th_none: '无',
+    modal_budget: '最高预算',
+    modal_winning_bid: '中标出价',
+    modal_winner_node: '中标节点',
+    modal_delivery_payload: '交付成果 Payload:',
+
+    // Agents analytics
+    agents_100_qualified: '100% 质押准入就绪',
+    agents_atomic_settled: '链上原子清算',
+
+    // Vault actions & toasts
+    vault_withdraw_title: '提取保证金',
+    vault_withdraw_amount: '提取金额 (USDC)',
+    vault_withdrawing: '正在提取...',
+    vault_agent_reserves: '智能体网络质押储备池',
+    vault_qualified_active: '已质押准入 / 活跃',
+    max_btn: '最大',
+    vault_deposit_loading: '正在向 Arc L1 存入质押保证金...',
+    vault_deposit_success: '成功质押到 StakeVault 金库！',
+    vault_deposit_fail: '存入保证金失败',
+    vault_withdraw_loading: '正在从 Arc L1 提取质押保证金...',
+    vault_withdraw_success: '成功提取质押金！',
+    vault_withdraw_fail: '提取保证金失败',
+    vault_min_stake_warn: '最低质押金额不能小于 0.001 USDC',
+    vault_invalid_withdraw_warn: '提现金额不合法或超出当前已质押额度',
+
+    // Footer
+    footer_protocol: 'AgentTender • Arc L1 机器商业逆向拍卖协议 • 原生 USDC 燃料',
+
+    create_escrow_breakdown: '托管资金与清算明细',
+    create_guarantee_title: 'Arc L1 链上结算安全不变量',
+    create_guarantee_desc: '基于 Arc L1 与 Circle 官方原生 USDC 的非托管原子清算机制。',
+    create_challenge_window: '15 秒乐观挑战窗口',
+    create_challenge_desc: '交付成果提交后进入 15 秒验证期，任何节点若发现计算偏差均可发起异议。',
+    create_slashing_title: '违约自动罚没与赔付不变式',
+    create_slashing_desc: '若胜出智能体未在交付窗口期内提交成果，合约自动罚没其 0.01 USDC 质押金并全额赔付至需求方账户。',
+
     // Theme
     theme_light: '浅色',
     theme_dark: '深色',
@@ -426,6 +554,7 @@ interface LanguageContextType {
   t: (key: keyof typeof DICTIONARY['en']) => string;
   getStatusText: (status: number | TenderStatus, fallback?: string) => string;
   localizeLogMessage: (msg: string) => string;
+  localizeStrategyDescription: (desc: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
@@ -434,6 +563,7 @@ const LanguageContext = createContext<LanguageContextType>({
   t: (key) => DICTIONARY.zh[key] || key,
   getStatusText: () => '',
   localizeLogMessage: (msg) => msg,
+  localizeStrategyDescription: (desc) => desc,
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -486,8 +616,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return out;
   };
 
+  const localizeStrategyDescription = (desc: string): string => {
+    if (language !== 'zh') return desc;
+    if (desc.includes('High-throughput cloud GPU cluster')) {
+      return '高吞吐云端 GPU 集群，采取追求成交量的激进降价博弈策略';
+    }
+    if (desc.includes('Specialized financial reasoning agent')) {
+      return '专业金融推理智能体，根据历史中标率平衡边际利润率';
+    }
+    if (desc.includes('Idle edge compute')) {
+      return '闲置边缘算力节点，实时监控订单簿并在最后一秒压哨狙击出价';
+    }
+    if (desc.includes('Formal verification & security model')) {
+      return '形式化验证与安全审计模型，以确定性证明审计链上不变量';
+    }
+    return desc;
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, getStatusText, localizeLogMessage }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, getStatusText, localizeLogMessage, localizeStrategyDescription }}>
       {children}
     </LanguageContext.Provider>
   );

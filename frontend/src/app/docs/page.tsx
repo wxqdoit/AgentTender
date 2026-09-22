@@ -1,40 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Header } from '../../components/Header';
 import { useLanguage } from '../../lib/i18n';
-import { useWallet } from '../../components/ReownProvider';
-import { fetchUSDCBalance } from '../../lib/web3';
 import { Card } from '../../components/ui/card';
 import { Cpu, Layers, Zap, ExternalLink, Bot } from 'lucide-react';
+import { CONFIG } from '../../config';
 
 export default function DocsPage() {
   const { t } = useLanguage();
-  const { activeAddress } = useWallet();
-  const [userBalance, setUserBalance] = useState<number>(0);
   const [blockNumber, setBlockNumber] = useState<string>('');
 
   useEffect(() => {
-    if (activeAddress) {
-      fetchUSDCBalance(activeAddress).then(setUserBalance);
-    }
-  }, [activeAddress]);
+    fetch(`${CONFIG.BACKEND_URL}/api/health`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.blockNumber) setBlockNumber(d.blockNumber);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background font-mono text-xs">
-      <Header
-        blockNumber={blockNumber}
-        userBalance={userBalance}
-        onRefreshBalance={() => activeAddress && fetchUSDCBalance(activeAddress).then(setUserBalance)}
-      />
+    <div className="flex-1 flex flex-col font-mono text-xs">
 
-      <motion.main
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6"
-      >
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
             <Cpu className="w-6 h-6 text-primary shrink-0" />
@@ -135,7 +123,7 @@ export default function DocsPage() {
             </div>
           </div>
         </Card>
-      </motion.main>
+      </main>
     </div>
   );
 }

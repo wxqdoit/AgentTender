@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
 import {
   Activity,
   Layers,
@@ -30,7 +29,10 @@ import { useTheme } from 'next-themes';
 import { useLanguage } from '../lib/i18n';
 import { useWallet } from './ReownProvider';
 import { formatUSDC } from '../lib/utils';
+import { CONFIG } from '../config';
 import { Logo } from './Logo';
+import { UsdcLogo } from './UsdcLogo';
+import Counter from './Counter';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import {
@@ -51,16 +53,33 @@ import {
 
 interface HeaderProps {
   blockNumber?: number | string;
-  userBalance?: number;
-  onRefreshBalance?: () => void;
 }
 
-export function Header({
-  blockNumber,
-  userBalance: propUserBalance,
-  onRefreshBalance: propOnRefreshBalance,
-}: HeaderProps) {
+export function Header({ blockNumber: propBlockNumber }: HeaderProps = {}) {
   const pathname = usePathname();
+  const [internalBlockNumber, setInternalBlockNumber] = useState<string | number>('');
+
+  React.useEffect(() => {
+    if (propBlockNumber) return;
+    let isMounted = true;
+    const fetchBlock = async () => {
+      try {
+        const res = await fetch(`${CONFIG.BACKEND_URL}/api/health`);
+        const data = await res.json();
+        if (isMounted && data?.blockNumber) {
+          setInternalBlockNumber(data.blockNumber);
+        }
+      } catch {}
+    };
+    fetchBlock();
+    const timer = setInterval(fetchBlock, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [propBlockNumber]);
+
+  const blockNumber = propBlockNumber || internalBlockNumber;
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -68,14 +87,11 @@ export function Header({
   const {
     activeAddress,
     isConnected,
-    userBalance: globalUserBalance,
-    refreshBalance: globalRefreshBalance,
+    userBalance,
+    refreshBalance,
     openReownModal,
     disconnectReown,
   } = useWallet();
-
-  const userBalance = propUserBalance !== undefined ? propUserBalance : globalUserBalance;
-  const onRefreshBalance = propOnRefreshBalance || globalRefreshBalance;
 
   const handleFaucet = () => {
     window.open('https://faucet.testnet.arc.network', '_blank');
@@ -117,7 +133,7 @@ export function Header({
             <Logo size="sm" />
           </Link>
 
-          {/* Desktop Navigation Links with Framer Motion hover & active transitions */}
+          {/* Desktop Navigation Links */}
           <nav className="hidden xl:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -158,8 +174,8 @@ export function Header({
                 >
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="font-semibold">{shortAddr}</span>
-                  <div className="hidden sm:flex items-center gap-1 pl-1.5 border-l border-border/80 text-muted-foreground">
-                    <span className="text-[10px]">USDC:</span>
+                  <div className="hidden sm:flex items-center gap-1.5 pl-1.5 border-l border-border/80 text-muted-foreground">
+                    <UsdcLogo className="w-3.5 h-3.5" />
                     <span className="text-foreground font-bold tabular-nums">{formatUSDC(userBalance)}</span>
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground opacity-70 ml-0.5 shrink-0" />
@@ -176,7 +192,7 @@ export function Header({
                       variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRefreshBalance();
+                        refreshBalance();
                       }}
                       className="h-5 px-1 text-[10px] text-muted-foreground hover:text-foreground gap-1"
                       title={t('refresh_balance')}
@@ -185,118 +201,160 @@ export function Header({
                       <span>{t('refresh_balance')}</span>
                     </Button>
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-lg font-black text-foreground tabular-nums">
-                      {formatUSDC(userBalance)}
-                    </span>
-                    <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
-                      USDC
-                    </Badge>
+                  <div className="flex items-center justify-between pt-0.5">
+                    <div className="text-lg font-bold text-foreground tabular-nums flex items-baseline gap-0.5">
+                      <Counter
+                        value={userBalance}
+                        fontSize={18}
+                        fontWeight={700}
+                        gap={1}
+                        horizontalPadding={0}
+                        textColor="currentColor"
+                        places={userBalance >= 10 ? [10, 1, '.', 0.1, 0.01, 0.001, 0.0001] : [1, '.', 0.1, 0.01, 0.001, 0.0001]}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border bg-secondary/60 text-xs font-semibold text-foreground shadow-xs">
+                      <UsdcLogo className="w-3.5 h-3.5" />
+                      <span>USDC</span>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-border/60 text-[10px] text-muted-foreground">
-                    <span className="truncate max-w-[180px] font-mono select-all">
-                      {activeAddress}
+                    <span className="truncate max-w-[170px]" title={activeAddress}>
+                      {shortAddr}
                     </span>
-                    <button
+                    <Button
+                      size="xs"
+                      variant="ghost"
                       onClick={handleCopyAddress}
-                      className="hover:text-foreground text-primary flex items-center gap-1 cursor-pointer shrink-0"
+                      className="h-4 px-1 text-[10px] text-muted-foreground hover:text-foreground gap-1"
                     >
-                      {addressCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                      <span>{addressCopied ? t('address_copied') : t('copy')}</span>
-                    </button>
+                      {addressCopied ? (
+                        <>
+                          <Check className="w-2.5 h-2.5 text-emerald-500" />
+                          <span className="text-emerald-500">{t('address_copied')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-2.5 h-2.5" />
+                          <span>{t('copy')}</span>
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
 
                 {/* Network & Gas Details */}
-                <div className="px-2 py-1 space-y-1.5 text-[11px]">
+                <div className="px-2 py-1 space-y-1 text-[11px] text-muted-foreground">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
+                    <span>{t('network_label')}:</span>
+                    <span className="text-foreground font-semibold flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      {t('network_label')}
-                    </span>
-                    <span className="font-semibold text-foreground">
-                      {t('network_arc')} {blockNumber ? `#${blockNumber}` : ''}
+                      {t('network_arc')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Coins className="w-3 h-3 text-primary" />
-                      {t('gas_label')}
-                    </span>
-                    <span className="font-semibold text-foreground">{t('gas_val')}</span>
+                    <span>{t('gas_label')}:</span>
+                    <span className="text-foreground font-semibold">{t('gas_val')}</span>
                   </div>
+                  {blockNumber && (
+                    <div className="flex items-center justify-between">
+                      <span>{t('block')}:</span>
+                      <span className="text-foreground tabular-nums">#{blockNumber}</span>
+                    </div>
+                  )}
                 </div>
 
                 <DropdownMenuSeparator />
 
-                {/* Action Links */}
+                {/* Action Items */}
                 <DropdownMenuItem
                   onClick={handleFaucet}
-                  className="flex items-center gap-2 cursor-pointer text-xs"
+                  className="cursor-pointer text-xs flex items-center justify-between hover:bg-secondary/80 focus:bg-secondary/80 py-1.5 px-2"
                 >
-                  <Droplets className="w-3.5 h-3.5 text-primary" />
-                  <span className="flex-1">{t('faucet_link')}</span>
+                  <span className="flex items-center gap-2">
+                    <Droplets className="w-3.5 h-3.5 text-primary" />
+                    <span>{t('faucet_link')}</span>
+                  </span>
+                  <ExternalLink className="w-3 h-3 opacity-60" />
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onClick={handleOpenExplorer}
-                  className="flex items-center gap-2 cursor-pointer text-xs"
+                  className="cursor-pointer text-xs flex items-center justify-between hover:bg-secondary/80 focus:bg-secondary/80 py-1.5 px-2"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="flex-1">{t('view_explorer')}</span>
+                  <span className="flex items-center gap-2">
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{t('view_explorer')}</span>
+                  </span>
+                  <ExternalLink className="w-3 h-3 opacity-60" />
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  onClick={openReownModal}
-                  className="flex items-center gap-2 cursor-pointer text-xs"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setTimeout(() => {
+                      openReownModal('Account');
+                    }, 60);
+                  }}
+                  onClick={() => {
+                    setTimeout(() => {
+                      openReownModal('Account');
+                    }, 60);
+                  }}
+                  className="cursor-pointer text-xs flex items-center justify-between hover:bg-secondary/80 focus:bg-secondary/80 py-1.5 px-2"
                 >
-                  <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="flex-1">{t('manage_wallet')}</span>
+                  <span className="flex items-center gap-2">
+                    <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{t('manage_wallet')}</span>
+                  </span>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
-                {/* Disconnect */}
                 <DropdownMenuItem
                   onClick={disconnectReown}
-                  className="flex items-center gap-2 cursor-pointer text-xs text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  className="cursor-pointer text-xs text-destructive hover:text-destructive hover:bg-destructive/10 focus:bg-destructive/10 py-1.5 px-2 flex items-center gap-2"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-destructive" />
+                  <LogOut className="w-3.5 h-3.5" />
                   <span>{t('wallet_disconnect')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            /* Connect Button */
+            /* Connect Wallet Button */
             <Button
               size="sm"
-              variant="default"
-              onClick={openReownModal}
-              className="h-8 px-3 text-xs font-mono whitespace-nowrap shrink-0"
+              onClick={() => openReownModal('Connect')}
+              className="h-8 px-3 text-xs font-mono font-medium gap-1.5 shrink-0"
             >
-              <Wallet className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+              <Wallet className="w-3.5 h-3.5" />
               <span>{t('wallet_connect')}</span>
             </Button>
           )}
 
-          {/* Language Switcher */}
+          {/* Language Toggle Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 border border-transparent hover:border-border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground border border-border shrink-0"
+                title={language === 'zh' ? '多语言' : 'Language'}
+              >
                 <Languages className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-28 font-mono text-xs border border-border">
+            <DropdownMenuContent align="end" className="font-mono text-xs border-border bg-popover">
               <DropdownMenuItem
                 onClick={() => setLanguage('zh')}
-                className="flex items-center justify-between cursor-pointer"
+                className="flex items-center justify-between gap-4 cursor-pointer"
               >
-                <span>中文</span>
+                <span>简体中文</span>
                 {language === 'zh' && <Check className="w-3.5 h-3.5 text-primary" />}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setLanguage('en')}
-                className="flex items-center justify-between cursor-pointer"
+                className="flex items-center justify-between gap-4 cursor-pointer"
               >
                 <span>English</span>
                 {language === 'en' && <Check className="w-3.5 h-3.5 text-primary" />}
@@ -304,42 +362,36 @@ export function Header({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Theme Switcher */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 border border-transparent hover:border-border">
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-28 font-mono text-xs border border-border">
-              <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer">
-                {t('theme_light')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer">
-                {t('theme_dark')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme('system')} className="cursor-pointer">
-                {t('theme_system')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Theme Toggle Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground border border-border shrink-0"
+            title={theme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
 
-          {/* Mobile & Tablet Drawer Menu */}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="ghost" className="xl:hidden h-8 w-8 text-muted-foreground hover:text-foreground shrink-0 border border-border">
-                <Menu className="w-4 h-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-4 font-mono bg-card border-r border-border flex flex-col justify-between">
-              <div className="space-y-4">
-                <SheetHeader className="pb-3 border-b border-border">
-                  <SheetTitle className="text-left">
+          {/* Mobile Hamburger Menu */}
+          <div className="xl:hidden">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground border border-border shrink-0"
+                >
+                  <Menu className="w-4 h-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-4 font-mono bg-background border-border">
+                <SheetHeader className="text-left mb-4">
+                  <SheetTitle className="text-sm font-bold text-foreground">
                     <Logo size="sm" />
                   </SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col gap-1.5 pt-2">
+                <nav className="flex flex-col gap-1">
                   {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
@@ -350,8 +402,8 @@ export function Header({
                         onClick={() => setMobileOpen(false)}
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
                           isActive
-                            ? 'bg-secondary text-foreground font-bold border border-border'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                            ? 'bg-secondary text-foreground font-semibold'
+                            : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                         }`}
                       >
                         <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : ''}`} />
@@ -360,12 +412,9 @@ export function Header({
                     );
                   })}
                 </nav>
-              </div>
-              <div className="border-t border-border pt-3 text-[10px] text-muted-foreground">
-                Arc Testnet &bull; Chain 5042002
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>

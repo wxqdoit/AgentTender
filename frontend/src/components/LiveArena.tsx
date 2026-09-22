@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ResponsiveContainer,
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -28,6 +29,7 @@ import { TenderData, TenderStatus } from '../types';
 import { useLanguage } from '../lib/i18n';
 import { formatUSDC } from '../lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import Counter from './Counter';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
@@ -41,7 +43,8 @@ import {
 interface LiveArenaProps {
   tender: TenderData | null;
   tendersList: TenderData[];
-  onSelectTender: (id: number) => void;
+  onSelectTender: (id: number | null) => void;
+  isLiveAuto?: boolean;
 }
 
 interface CustomTooltipProps {
@@ -78,7 +81,7 @@ function CustomChartTooltip({ active, payload }: CustomTooltipProps) {
   return null;
 }
 
-export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProps) {
+export function LiveArena({ tender, tendersList, onSelectTender, isLiveAuto = true }: LiveArenaProps) {
   const { t, getStatusText } = useLanguage();
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [totalWindow, setTotalWindow] = useState<number>(35);
@@ -177,53 +180,59 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
 
   return (
     <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
-      {/* Header Bar */}
-      <CardHeader className="py-3 px-4 sm:px-5 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3 space-y-0 bg-card">
-        <div className="flex items-center gap-3.5 min-w-0">
-          <motion.div
-            key={tender.id}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="h-8 px-3 rounded-md bg-secondary/80 border border-border flex items-center justify-center font-mono font-bold text-primary text-xs shrink-0 mx-1"
-          >
+      {/* Header Bar - Exactly h-14 matching MachineLogsTerminal */}
+      <CardHeader className="h-14 py-0 px-4 sm:px-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-card">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="h-7 px-2 rounded border border-primary/30 bg-primary/10 flex items-center justify-center font-mono font-bold text-primary text-xs shrink-0">
             #{tender.id}
-          </motion.div>
-          <div className="min-w-0 flex flex-col gap-1">
-            <CardTitle className="font-mono font-bold text-xs tracking-wider text-foreground uppercase whitespace-nowrap">
-              {t('arena_title')}
-            </CardTitle>
-            <div>
-              <Badge
-                variant={isSettled ? 'outline' : isBidding ? 'default' : 'secondary'}
-                className={`font-mono text-[10px] uppercase font-semibold py-0 px-2 h-5 whitespace-nowrap border-border ${
-                  isBidding
-                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-                    : isSettled
-                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                    : 'bg-secondary text-foreground'
-                }`}
-              >
-                {isBidding && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-ping inline-block" />}
-                {getStatusText(tender.status, tender.statusText)}
-              </Badge>
-            </div>
           </div>
+          <CardTitle className="font-mono font-bold text-xs tracking-wider text-foreground uppercase whitespace-nowrap hidden sm:inline-block">
+            {t('arena_title')}
+          </CardTitle>
+          <Badge
+            variant={isSettled ? 'outline' : isBidding ? 'default' : 'secondary'}
+            className={`font-mono text-[10px] uppercase font-semibold py-0 px-2 h-6 whitespace-nowrap shrink-0 border-border ${
+              isBidding
+                ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                : isSettled
+                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                : 'bg-secondary text-foreground'
+            }`}
+          >
+            {isBidding && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-ping inline-block" />}
+            {getStatusText(tender.status, tender.statusText)}
+          </Badge>
         </div>
 
         {/* shadcn Select Dropdown & Quick New Tender Link */}
-        <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+        <div className="flex items-center gap-2 shrink-0">
+          {!isLiveAuto && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onSelectTender(null)}
+              className="h-7 px-2 text-[10px] font-mono text-amber-500 border-amber-500/40 hover:bg-amber-500/10 gap-1 shrink-0"
+              title={t('resume_live')}
+            >
+              <Radio className="w-2.5 h-2.5 animate-pulse" />
+              <span className="hidden sm:inline">{t('resume_live')}</span>
+            </Button>
+          )}
+
           <Select
-            value={String(tender.id)}
-            onValueChange={(val) => onSelectTender(Number(val))}
+            value={isLiveAuto ? 'auto' : String(tender.id)}
+            onValueChange={(val) => onSelectTender(val === 'auto' ? null : Number(val))}
           >
-            <SelectTrigger className="h-7 text-xs font-mono border-border bg-background px-2.5 min-w-[140px] max-w-[200px]">
+            <SelectTrigger className="h-7 text-xs font-mono border-border bg-background px-2.5 min-w-[155px] max-w-[220px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent align="end" className="font-mono text-xs border-border bg-popover max-h-56">
+            <SelectContent align="end" className="font-mono text-xs border-border bg-popover max-h-60">
+              <SelectItem value="auto" className="font-semibold text-primary cursor-pointer">
+                {t('live_auto_follow')}
+              </SelectItem>
               {tendersList.map((tItem) => (
-                <SelectItem key={tItem.id} value={String(tItem.id)}>
-                  #{tItem.id} ({formatUSDC(tItem.currentLowestBid)} USDC)
+                <SelectItem key={tItem.id} value={String(tItem.id)} className="cursor-pointer">
+                  #{tItem.id} ({formatUSDC(tItem.currentLowestBid)} USDC){tItem.status === 0 ? ' 🟢' : ''}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -257,16 +266,17 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                 -{savingsPercent}%
               </span>
             </div>
-            <div className="my-1.5">
-              <motion.div
-                key={tender.currentLowestBid}
-                initial={{ scale: 1.1, opacity: 0.8 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                className="text-2xl font-black text-foreground tabular-nums tracking-tight"
-              >
-                {formatUSDC(tender.currentLowestBid)} <span className="text-xs font-normal text-muted-foreground">USDC</span>
-              </motion.div>
+            <div className="my-1.5 flex items-baseline gap-1 text-2xl font-black text-foreground tabular-nums tracking-tight">
+              <Counter
+                value={tender.currentLowestBid}
+                fontSize={24}
+                fontWeight={900}
+                gap={1}
+                horizontalPadding={0}
+                textColor="currentColor"
+                places={[1, '.', 0.1, 0.01, 0.001]}
+              />
+              <span className="text-xs font-normal text-muted-foreground">USDC</span>
             </div>
             <div className="text-[10px] text-muted-foreground truncate">
               {t('initial_budget')}: {formatUSDC(tender.maxBudget)} USDC ({t('saved_ratio')}: {formatUSDC(savings)} USDC)
@@ -306,15 +316,16 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
               </span>
               <Clock className="w-3.5 h-3.5 text-muted-foreground" />
             </div>
-            <div className="my-1.5 flex items-baseline gap-1.5">
-              <motion.span
-                key={Math.floor(timeLeft)}
-                initial={{ opacity: 0.85 }}
-                animate={{ opacity: 1 }}
-                className="text-2xl font-black text-foreground tabular-nums"
-              >
-                {isSettled ? '0.0' : timeLeft.toFixed(1)}
-              </motion.span>
+            <div className="my-1.5 flex items-baseline gap-1 text-2xl font-black text-foreground tabular-nums">
+              <Counter
+                value={isSettled ? 0 : Number(timeLeft.toFixed(1))}
+                fontSize={24}
+                fontWeight={900}
+                gap={1}
+                horizontalPadding={0}
+                textColor="currentColor"
+                places={timeLeft >= 10 ? [10, 1, '.', 0.1] : [1, '.', 0.1]}
+              />
               <span className="text-xs text-muted-foreground">{t('seconds_unit')}</span>
             </div>
             {/* Flat Progress Indicator */}
@@ -349,9 +360,9 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
+                <ComposedChart
                   data={chartData}
-                  margin={{ top: 12, right: 16, left: -20, bottom: 0 }}
+                  margin={{ top: 12, right: 16, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid
                     stroke="hsl(var(--border))"
@@ -367,12 +378,13 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                     axisLine={{ stroke: 'hsl(var(--border))' }}
                   />
                   <YAxis
+                    width={46}
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={10}
                     fontFamily="monospace"
                     tickLine={false}
                     axisLine={{ stroke: 'hsl(var(--border))' }}
-                    tickFormatter={(val) => `${val}`}
+                    tickFormatter={(val) => (typeof val === 'number' ? val.toFixed(3) : `${val}`)}
                     domain={['dataMin - 0.001', 'dataMax + 0.001']}
                   />
                   <Tooltip content={<CustomChartTooltip />} />
@@ -391,9 +403,15 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                   <Area
                     type="stepAfter"
                     dataKey="price"
+                    stroke="none"
+                    fill="rgba(16, 185, 129, 0.06)"
+                    isAnimationActive={false}
+                  />
+                  <Line
+                    type="stepAfter"
+                    dataKey="price"
                     stroke="#10B981"
                     strokeWidth={2.5}
-                    fill="rgba(16, 185, 129, 0.06)"
                     isAnimationActive={true}
                     animationDuration={600}
                     dot={{
@@ -409,7 +427,7 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                       strokeWidth: 2,
                     }}
                   />
-                </AreaChart>
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </div>

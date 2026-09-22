@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Search, Filter, Eye, Layers, PlusCircle, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { Header } from '../../components/Header';
 import { TenderData, TenderStatus } from '../../types';
 import { CONFIG } from '../../config';
 import { useLanguage } from '../../lib/i18n';
 import { useWallet } from '../../components/ReownProvider';
-import { fetchUSDCBalance } from '../../lib/web3';
 import { formatUSDC } from '../../lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -43,21 +40,12 @@ export default function TendersPage() {
   const { activeAddress } = useWallet();
 
   const [tenders, setTenders] = useState<TenderData[]>([]);
-  const [userBalance, setUserBalance] = useState<number>(0);
   const [blockNumber, setBlockNumber] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedTender, setSelectedTender] = useState<TenderData | null>(null);
 
-  const refreshBalance = async () => {
-    if (activeAddress) {
-      const bal = await fetchUSDCBalance(activeAddress);
-      setUserBalance(bal);
-    }
-  };
-
   useEffect(() => {
-    refreshBalance();
     const fetchTenders = async () => {
       try {
         const [tRes, hRes] = await Promise.all([
@@ -85,19 +73,9 @@ export default function TendersPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-background font-mono">
-      <Header
-        blockNumber={blockNumber}
-        userBalance={userBalance}
-        onRefreshBalance={refreshBalance}
-      />
+    <div className="flex-1 flex flex-col">
 
-      <motion.main
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6"
-      >
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2.5">
@@ -105,7 +83,7 @@ export default function TendersPage() {
               <span>{t('explorer_title')}</span>
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Arc L1 Reverse-Auction Order Book &bull; Verified On-Chain Micro-Tenders
+              {t('explorer_subtitle')}
             </p>
           </div>
 
@@ -130,64 +108,61 @@ export default function TendersPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <div className="w-full sm:w-auto">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-9 text-xs font-mono border-border bg-background px-3 min-w-[150px]">
+                <SelectTrigger className="w-full sm:w-[185px] h-9 text-xs font-mono bg-background border-border flex items-center gap-2 cursor-pointer">
+                  <Filter className="w-3.5 h-3.5 text-primary shrink-0" />
                   <SelectValue placeholder={t('all_status')} />
                 </SelectTrigger>
                 <SelectContent align="end" className="font-mono text-xs border-border bg-popover">
                   <SelectItem value="all">{t('all_status')}</SelectItem>
-                  <SelectItem value="0">{t('filter_open')}</SelectItem>
-                  <SelectItem value="1">{t('filter_awarded')}</SelectItem>
-                  <SelectItem value="2">{t('filter_delivered')}</SelectItem>
-                  <SelectItem value="3">{t('filter_settled')}</SelectItem>
+                  <SelectItem value={TenderStatus.OPEN.toString()}>{t('filter_open')}</SelectItem>
+                  <SelectItem value={TenderStatus.AWARDED.toString()}>{t('filter_awarded')}</SelectItem>
+                  <SelectItem value={TenderStatus.DELIVERED.toString()}>{t('filter_delivered')}</SelectItem>
+                  <SelectItem value={TenderStatus.SETTLED.toString()}>{t('filter_settled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </Card>
 
-        {/* Order Book Table */}
+        {/* Table Results */}
         <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <Table className="text-xs font-mono">
-              <TableHeader>
-                <TableRow className="border-b border-border bg-secondary/30 hover:bg-secondary/30">
-                  <TableHead className="w-16 font-bold">{t('th_id')}</TableHead>
-                  <TableHead className="min-w-[200px] font-bold">{t('th_task')}</TableHead>
-                  <TableHead className="w-28 font-bold">{t('th_budget')}</TableHead>
-                  <TableHead className="w-28 font-bold">{t('th_lowest')}</TableHead>
-                  <TableHead className="w-32 font-bold">{t('th_winner')}</TableHead>
-                  <TableHead className="w-32 font-bold">{t('th_status')}</TableHead>
-                  <TableHead className="w-20 text-right font-bold">{t('th_action')}</TableHead>
+            <Table>
+              <TableHeader className="bg-secondary/40">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="w-16 font-mono text-xs font-bold text-foreground uppercase">{t('th_id')}</TableHead>
+                  <TableHead className="font-mono text-xs font-bold text-foreground uppercase">{t('th_task')}</TableHead>
+                  <TableHead className="w-28 font-mono text-xs font-bold text-foreground uppercase">{t('th_budget')}</TableHead>
+                  <TableHead className="w-32 font-mono text-xs font-bold text-foreground uppercase">{t('th_lowest')}</TableHead>
+                  <TableHead className="w-36 font-mono text-xs font-bold text-foreground uppercase">{t('th_winner')}</TableHead>
+                  <TableHead className="w-32 font-mono text-xs font-bold text-foreground uppercase">{t('th_status')}</TableHead>
+                  <TableHead className="w-24 text-right font-mono text-xs font-bold text-foreground uppercase">{t('th_action')}</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="text-xs font-mono">
                 {filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                      No tenders found matching query
+                      {t('empty_bids')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((tItem) => (
-                    <TableRow
-                      key={tItem.id}
-                      className="border-b border-border/70 hover:bg-secondary/40 transition-colors"
-                    >
+                    <TableRow key={tItem.id} className="border-border hover:bg-secondary/20 transition-colors">
                       <TableCell className="font-bold text-primary">#{tItem.id}</TableCell>
                       <TableCell className="max-w-xs truncate font-medium text-foreground">
                         {tItem.taskMetadataURI}
                       </TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">
+                      <TableCell className="tabular-nums font-semibold text-foreground">
                         {formatUSDC(tItem.maxBudget)} USDC
                       </TableCell>
                       <TableCell className="tabular-nums font-bold text-emerald-600 dark:text-emerald-400">
                         {formatUSDC(tItem.currentLowestBid)} USDC
                       </TableCell>
                       <TableCell className="truncate text-muted-foreground">
-                        {tItem.lowestBidderName || 'None'}
+                        {tItem.lowestBidderName || t('th_none')}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -221,11 +196,11 @@ export default function TendersPage() {
             </Table>
           </div>
         </Card>
-      </motion.main>
+      </main>
 
       {/* Details Dialog */}
       <Dialog open={!!selectedTender} onOpenChange={(open) => !open && setSelectedTender(null)}>
-        <DialogContent className="max-w-2xl font-mono text-xs bg-card border-border rounded-lg">
+        <DialogContent className="sm:max-w-2xl w-full font-mono text-xs bg-card border-border rounded-xl shadow-2xl p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground">
               <span>{t('select_tender')} #{selectedTender?.id}</span>
@@ -240,23 +215,23 @@ export default function TendersPage() {
 
           {selectedTender && (
             <div className="flex flex-col gap-4 py-2">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 rounded-md bg-secondary/40 border border-border">
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Budget</span>
-                  <div className="font-bold text-sm text-foreground mt-0.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                <div className="p-3 rounded-md bg-secondary/40 border border-border min-w-0">
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">{t('modal_budget')}</span>
+                  <div className="font-bold text-sm text-foreground mt-0.5 tabular-nums truncate">
                     {formatUSDC(selectedTender.maxBudget)} USDC
                   </div>
                 </div>
-                <div className="p-3 rounded-md bg-secondary/40 border border-border">
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Winning Bid</span>
-                  <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
+                <div className="p-3 rounded-md bg-secondary/40 border border-border min-w-0">
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">{t('modal_winning_bid')}</span>
+                  <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums truncate">
                     {formatUSDC(selectedTender.currentLowestBid)} USDC
                   </div>
                 </div>
-                <div className="p-3 rounded-md bg-secondary/40 border border-border">
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Winner Node</span>
-                  <div className="font-bold text-sm text-foreground truncate mt-0.5">
-                    {selectedTender.lowestBidderName || 'None'}
+                <div className="p-3 rounded-md bg-secondary/40 border border-border min-w-0">
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">{t('modal_winner_node')}</span>
+                  <div className="font-bold text-sm text-foreground mt-0.5 truncate" title={selectedTender.lowestBidderName || t('th_none')}>
+                    {selectedTender.lowestBidderName || t('th_none')}
                   </div>
                 </div>
               </div>
@@ -264,7 +239,7 @@ export default function TendersPage() {
               {selectedTender.deliveryPayload && (
                 <div className="flex flex-col gap-1.5">
                   <span className="font-semibold text-foreground uppercase text-[10px] tracking-wider">
-                    Delivery Payload:
+                    {t('modal_delivery_payload')}
                   </span>
                   <pre className="p-3 rounded-md bg-background border border-border text-[11px] overflow-x-auto max-h-48 leading-relaxed text-foreground">
                     {(() => {

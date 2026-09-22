@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import {
   Vault,
   ShieldAlert,
@@ -12,12 +11,10 @@ import {
   Zap,
   Lock,
 } from 'lucide-react';
-import { Header } from '../../components/Header';
 import { CONFIG } from '../../config';
 import { useLanguage } from '../../lib/i18n';
 import { useWallet } from '../../components/ReownProvider';
 import {
-  fetchUSDCBalance,
   fetchUserStake,
   depositStakeOnChain,
   withdrawStakeOnChain,
@@ -32,10 +29,9 @@ import { AgentProfile } from '../../types';
 import { formatUSDC } from '../../lib/utils';
 
 export default function StakeVaultPage() {
-  const { t } = useLanguage();
-  const { activeAddress, isConnected, openReownModal } = useWallet();
+  const { t, language } = useLanguage();
+  const { activeAddress, isConnected, userBalance, refreshBalance, openReownModal } = useWallet();
 
-  const [userBalance, setUserBalance] = useState(0);
   const [userStake, setUserStake] = useState(0);
   const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [blockNumber, setBlockNumber] = useState<number | string>('');
@@ -44,24 +40,22 @@ export default function StakeVaultPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('0.005');
   const [isDepositing, setIsDepositing] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
-  const refreshState = async () => {
+  const refreshStake = async () => {
     if (activeAddress) {
-      const [bal, stk] = await Promise.all([
-        fetchUSDCBalance(activeAddress),
-        fetchUserStake(activeAddress),
-      ]);
-      setUserBalance(bal);
-      setUserStake(stk);
+      try {
+        const stk = await fetchUserStake(activeAddress);
+        setUserStake(stk);
+      } catch (e) {
+        console.warn('Stake fetch error:', e);
+      }
     } else {
-      setUserBalance(0);
       setUserStake(0);
     }
   };
 
   useEffect(() => {
-    refreshState();
+    refreshStake();
     const fetchVaultData = async () => {
       try {
         const [aRes, hRes] = await Promise.all([
@@ -87,18 +81,18 @@ export default function StakeVaultPage() {
     }
     const val = parseFloat(depositAmount);
     if (!val || val < 0.001) {
-      toast.warning('最低质押金额不能小于 0.001 USDC');
+      toast.warning(t('vault_min_stake_warn'));
       return;
     }
 
-    const toastId = toast.loading('正在向 Arc L1 存入质押保证金...');
+    const toastId = toast.loading(t('vault_deposit_loading'));
     try {
       setIsDepositing(true);
       await depositStakeOnChain(val);
-      toast.success(`成功质押 ${val} USDC 到 StakeVault！`, { id: toastId });
-      await refreshState();
+      toast.success(`${t('vault_deposit_success')} (+${val} USDC)`, { id: toastId });
+      await Promise.all([refreshBalance(), refreshStake()]);
     } catch (err: any) {
-      toast.error(`存入保证金失败: ${formatWeb3Error(err)}`, { id: toastId });
+      toast.error(`${t('vault_deposit_fail')}: ${formatWeb3Error(err, language)}`, { id: toastId });
     } finally {
       setIsDepositing(false);
     }
@@ -112,18 +106,18 @@ export default function StakeVaultPage() {
     }
     const val = parseFloat(withdrawAmount);
     if (!val || val < 0.001 || val > userStake) {
-      toast.warning('提现金额不合法或超出当前已质押额度');
+      toast.warning(t('vault_invalid_withdraw_warn'));
       return;
     }
 
-    const toastId = toast.loading('正在从 Arc L1 提取质押保证金...');
+    const toastId = toast.loading(t('vault_withdraw_loading'));
     try {
       setIsWithdrawing(true);
       await withdrawStakeOnChain(val);
-      toast.success(`成功提取 ${val} USDC 质押金！`, { id: toastId });
-      await refreshState();
+      toast.success(`${t('vault_withdraw_success')} (-${val} USDC)`, { id: toastId });
+      await Promise.all([refreshBalance(), refreshStake()]);
     } catch (err: any) {
-      toast.error(`提取保证金失败: ${formatWeb3Error(err)}`, { id: toastId });
+      toast.error(`${t('vault_withdraw_fail')}: ${formatWeb3Error(err, language)}`, { id: toastId });
     } finally {
       setIsWithdrawing(false);
     }
@@ -132,19 +126,9 @@ export default function StakeVaultPage() {
   const totalAgentStake = agents.reduce((acc, a) => acc + (a.stakeUSDC || 0), 0);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-mono">
-      <Header
-        blockNumber={blockNumber}
-        userBalance={userBalance}
-        onRefreshBalance={refreshState}
-      />
+    <div className="flex-1 flex flex-col">
 
-      <motion.main
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6"
-      >
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
             <Vault className="w-6 h-6 text-primary shrink-0" />
@@ -155,70 +139,73 @@ export default function StakeVaultPage() {
           </p>
         </div>
 
-        {/* Global Vault Metric Cards */}
+        {/* Global Vault Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="border border-border bg-card shadow-sm p-4 rounded-lg flex flex-col justify-between">
-            <span className="text-[11px] text-muted-foreground uppercase font-bold">
-              Total Swarm Stake
+          <Card className="border border-border bg-card shadow-sm rounded-lg p-5">
+            <span className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
+              {t('user_stake')}
             </span>
-            <div className="my-2 text-2xl font-bold text-foreground tabular-nums">
-              {formatUSDC(totalAgentStake)} <span className="text-xs font-normal text-muted-foreground">USDC</span>
+            <div className="text-2xl font-bold text-foreground tabular-nums my-1.5 flex items-baseline gap-1.5">
+              <span>{formatUSDC(userStake)}</span>
+              <span className="text-xs font-normal text-muted-foreground">USDC</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-emerald-500 font-semibold">
+            <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
               <Lock className="w-3 h-3" />
-              <span>Locked in AgentTender.sol</span>
-            </div>
+              {t('stake_secured')}
+            </span>
           </Card>
 
-          <Card className="border border-border bg-card shadow-sm p-4 rounded-lg flex flex-col justify-between">
-            <span className="text-[11px] text-muted-foreground uppercase font-bold">
-              Your Deposited Stake
+          <Card className="border border-border bg-card shadow-sm rounded-lg p-5">
+            <span className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
+              {t('total_staked_pool')}
             </span>
-            <div className="my-2 text-2xl font-bold text-primary tabular-nums">
-              {formatUSDC(userStake)} <span className="text-xs font-normal text-muted-foreground">USDC</span>
+            <div className="text-2xl font-bold text-foreground tabular-nums my-1.5 flex items-baseline gap-1.5">
+              <span>{formatUSDC(totalAgentStake + userStake)}</span>
+              <span className="text-xs font-normal text-muted-foreground">USDC</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span>{userStake >= 0.01 ? 'Qualified as Agent Bidder' : 'Stake >= 0.01 USDC to Bid'}</span>
-            </div>
+            <span className="text-[10px] text-primary font-semibold">
+              Arc L1 StakeVault (0xfcAF...0EcF)
+            </span>
           </Card>
 
-          <Card className="border border-border bg-card shadow-sm p-4 rounded-lg flex flex-col justify-between">
-            <span className="text-[11px] text-muted-foreground uppercase font-bold">
-              Wallet Available Balance
+          <Card className="border border-border bg-card shadow-sm rounded-lg p-5">
+            <span className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider">
+              {t('min_qualification')}
             </span>
-            <div className="my-2 text-2xl font-bold text-foreground tabular-nums">
-              {formatUSDC(userBalance)} <span className="text-xs font-normal text-muted-foreground">USDC</span>
+            <div className="text-2xl font-bold text-foreground tabular-nums my-1.5 flex items-baseline gap-1.5">
+              <span>0.010</span>
+              <span className="text-xs font-normal text-muted-foreground">USDC</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <Coins className="w-3 h-3 text-primary" />
-              <span>Official Arc Native USDC</span>
-            </div>
+            <span className="text-[10px] text-amber-500 font-semibold flex items-center gap-1">
+              <ShieldAlert className="w-3 h-3" />
+              {t('slashing_rule_title')}
+            </span>
           </Card>
         </div>
 
-        {/* Slashing & Security Invariant */}
-        <Card className="border border-border bg-card p-5 rounded-lg shadow-sm space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-            <ShieldAlert className="w-4 h-4 text-amber-500" />
-            <span>Anti-Griefing &amp; Defaulter Slashing Invariant</span>
+        {/* Slashing Invariant Warning */}
+        <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs font-mono space-y-1">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>{t('slashing_rule_title')}</span>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            The StakeVault requires participating nodes to maintain a minimum stake (0.01 USDC). If a winning node fails to submit execution proof before the deadline, the contract slashes their stake and transfers it directly to the tender creator as compensation.
+          <p className="text-[11px] text-muted-foreground leading-relaxed pl-6">
+            {t('slashing_rule_desc')}
           </p>
-        </Card>
+        </div>
 
-        {/* Deposit & Withdraw Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Deposit & Withdraw Interactive Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Deposit Stake */}
           <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
             <CardHeader className="py-4 px-6 border-b border-border bg-card">
               <CardTitle className="text-sm font-semibold flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ArrowDownToLine className="w-4 h-4 text-emerald-500" />
-                  <span className="text-foreground">Deposit Agent Stake</span>
+                  <span className="text-foreground">{t('deposit_stake_title')}</span>
                 </div>
                 <Badge variant="outline" className="font-mono text-xs border-border bg-secondary/50 font-normal">
-                  Min: 0.001 USDC
+                  {t('balance')}: {formatUSDC(userBalance)} USDC
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -226,7 +213,7 @@ export default function StakeVaultPage() {
               <form onSubmit={handleDeposit} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground block">
-                    Deposit Amount (USDC)
+                    {t('stake_amount_label')}
                   </label>
                   <div className="flex gap-2">
                     <Input
@@ -245,7 +232,7 @@ export default function StakeVaultPage() {
                       onClick={() => setDepositAmount(userBalance > 0 ? userBalance.toFixed(3) : '0.01')}
                       className="text-xs font-mono border-border shrink-0 h-10 px-4"
                     >
-                      MAX
+                      {t('max_btn')}
                     </Button>
                   </div>
                 </div>
@@ -255,7 +242,7 @@ export default function StakeVaultPage() {
                   disabled={isDepositing || userBalance < 0.001 || parseFloat(depositAmount) < 0.001}
                   className="w-full h-10 text-xs font-medium rounded-md"
                 >
-                  {isDepositing ? 'Depositing on Arc L1...' : !isConnected ? t('wallet_connect') : 'Deposit Stake'}
+                  {isDepositing ? t('broadcasting') : !isConnected ? t('wallet_connect') : t('deposit_btn')}
                 </Button>
               </form>
             </CardContent>
@@ -267,10 +254,10 @@ export default function StakeVaultPage() {
               <CardTitle className="text-sm font-semibold flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ArrowUpFromLine className="w-4 h-4 text-amber-500" />
-                  <span className="text-foreground">Withdraw Stake</span>
+                  <span className="text-foreground">{t('vault_withdraw_title')}</span>
                 </div>
                 <Badge variant="outline" className="font-mono text-xs border-border bg-secondary/50 font-normal">
-                  Staked: {formatUSDC(userStake)} USDC
+                  {t('staked')}: {formatUSDC(userStake)} USDC
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -278,7 +265,7 @@ export default function StakeVaultPage() {
               <form onSubmit={handleWithdraw} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground block">
-                    Withdraw Amount (USDC)
+                    {t('vault_withdraw_amount')}
                   </label>
                   <div className="flex gap-2">
                     <Input
@@ -297,7 +284,7 @@ export default function StakeVaultPage() {
                       onClick={() => setWithdrawAmount(userStake > 0 ? userStake.toFixed(3) : '0')}
                       className="text-xs font-mono border-border shrink-0 h-10 px-4"
                     >
-                      MAX
+                      {t('max_btn')}
                     </Button>
                   </div>
                 </div>
@@ -308,27 +295,19 @@ export default function StakeVaultPage() {
                   disabled={isWithdrawing || userStake <= 0 || parseFloat(withdrawAmount) > userStake || parseFloat(withdrawAmount) < 0.001}
                   className="w-full h-10 text-xs font-medium border border-border rounded-md"
                 >
-                  {isWithdrawing ? 'Withdrawing...' : !isConnected ? t('wallet_connect') : 'Withdraw Stake'}
+                  {isWithdrawing ? t('vault_withdrawing') : !isConnected ? t('wallet_connect') : t('withdraw_btn')}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </div>
 
-        {/* Status Toast */}
-        {statusMsg && (
-          <div className="p-3.5 rounded-lg border border-border bg-secondary/60 text-xs font-mono text-primary flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            <span>{statusMsg}</span>
-          </div>
-        )}
-
         {/* Agent Node Stakes */}
         <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
           <CardHeader className="py-4 px-6 border-b border-border bg-card">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
               <Bot className="w-4 h-4 text-primary" />
-              <span>Agent Node Staked Reserves</span>
+              <span>{t('vault_agent_reserves')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -355,7 +334,7 @@ export default function StakeVaultPage() {
                       {formatUSDC(agent.stakeUSDC)} USDC
                     </span>
                     <span className="block text-[10px] text-emerald-500 font-mono mt-0.5 uppercase tracking-wider font-semibold">
-                      QUALIFIED / ACTIVE
+                      {t('vault_qualified_active')}
                     </span>
                   </div>
                 </div>
@@ -363,7 +342,7 @@ export default function StakeVaultPage() {
             </div>
           </CardContent>
         </Card>
-      </motion.main>
+      </main>
     </div>
   );
 }

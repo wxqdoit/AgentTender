@@ -53,7 +53,7 @@ export function MachineLogsTerminal({ logs }: MachineLogsTerminalProps) {
 
   return (
     <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden flex flex-col">
-      <CardHeader className="py-3 px-4 sm:px-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-card">
+      <CardHeader className="h-14 py-0 px-4 sm:px-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-card">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
           <CardTitle className="text-xs font-mono font-bold tracking-wider uppercase text-foreground">

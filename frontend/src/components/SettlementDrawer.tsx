@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   CheckCircle2,
   Copy,
@@ -32,16 +32,14 @@ import {
 interface SettlementDrawerProps {
   tender: TenderData | null;
   onSettled: () => void;
-  onRefreshBalance: () => void;
 }
 
 export function SettlementDrawer({
   tender,
   onSettled,
-  onRefreshBalance,
 }: SettlementDrawerProps) {
-  const { t, getStatusText } = useLanguage();
-  const { isConnected, openReownModal } = useWallet();
+  const { t, language, getStatusText } = useLanguage();
+  const { isConnected, openReownModal, refreshBalance } = useWallet();
 
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -70,11 +68,12 @@ export function SettlementDrawer({
     try {
       setIsConfirming(true);
       await confirmDeliveryOnChain(tender.id);
+      toast.success(t('settlement_confirm_success'));
       onSettled();
-      onRefreshBalance();
+      refreshBalance();
     } catch (err: any) {
       console.error(err);
-      toast.error(`确认交付失败: ${formatWeb3Error(err)}`);
+      toast.error(`${t('settlement_confirm_fail')}: ${formatWeb3Error(err, language)}`);
     } finally {
       setIsConfirming(false);
     }
@@ -88,11 +87,12 @@ export function SettlementDrawer({
     try {
       setIsClaiming(true);
       await claimPayoutOnChain(tender.id);
+      toast.success(t('settlement_claim_success'));
       onSettled();
-      onRefreshBalance();
+      refreshBalance();
     } catch (err: any) {
       console.error(err);
-      toast.error(`提取报酬失败: ${formatWeb3Error(err)}`);
+      toast.error(`${t('settlement_claim_fail')}: ${formatWeb3Error(err, language)}`);
     } finally {
       setIsClaiming(false);
     }
@@ -110,170 +110,217 @@ export function SettlementDrawer({
     <>
       {/* Compact Clean Summary Card */}
       <motion.div
-        layout
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
       >
         <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
           <CardHeader className="py-3 px-4 sm:px-5 border-b border-border bg-card">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 text-foreground">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span>{t('settlement_status_title')}</span>
-              </CardTitle>
-              <Badge
-                variant="outline"
-                className={`font-mono text-[10px] uppercase border-border px-2 py-0.5 ${
-                  isSettled
-                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                    : isDelivered
-                    ? 'bg-blue-500/10 text-blue-500 border-blue-500/30'
-                    : 'bg-secondary/50 text-muted-foreground'
-                }`}
-              >
-                {getStatusText(tender.status, tender.statusText)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                <CardTitle className="text-xs font-mono font-bold tracking-wider uppercase text-foreground">
+                  {isSettled ? t('settlement_status_title') : t('settlement_verification')}
+                </CardTitle>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isSettled && (
+                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-mono text-[10px] uppercase font-bold">
+                    {t('badge_settled')}
+                  </Badge>
+                )}
+                {isDelivered && (
+                  <Badge variant="outline" className="border-amber-500/30 text-amber-500 bg-amber-500/10 font-mono text-[10px] uppercase font-bold animate-pulse">
+                    {t('badge_delivered')}
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-muted-foreground">{t('active_tender')}:</span>
-              <span className="text-foreground font-bold">#{tender.id}</span>
+
+          <CardContent className="p-4 sm:p-5 space-y-4 font-mono text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="p-2.5 rounded-md bg-secondary/30 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                  {t('active_tender')}
+                </span>
+                <span className="font-bold text-foreground text-xs mt-0.5 block truncate">
+                  #{tender.id}
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-md bg-secondary/30 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                  {t('winning_node')}
+                </span>
+                <span className="font-bold text-foreground text-xs mt-0.5 block truncate">
+                  {tender.lowestBidderName || 'None'}
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-md bg-secondary/30 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                  {t('clearing_price')}
+                </span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs mt-0.5 block tabular-nums">
+                  {formatUSDC(tender.currentLowestBid)} USDC
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-md bg-secondary/30 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                  {t('refund_amount')}
+                </span>
+                <span className="font-bold text-primary text-xs mt-0.5 block tabular-nums">
+                  {formatUSDC(Math.max(0, tender.maxBudget - tender.currentLowestBid))} USDC
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-muted-foreground">{t('winning_node')}:</span>
-              <span className="text-foreground font-medium">
-                {tender.lowestBidderName || (tender.lowestBidder && tender.lowestBidder !== '0x0000000000000000000000000000000000000000'
-                  ? `${tender.lowestBidder.slice(0, 8)}...${tender.lowestBidder.slice(-6)}`
-                  : '---')}
-              </span>
-            </div>
+            {/* Action Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+              <div className="flex items-center gap-2">
+                {tender.deliveryPayload && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsOpen(true)}
+                    className="h-8 text-xs font-mono border-border bg-background hover:bg-secondary gap-1.5"
+                  >
+                    <FileCode className="w-3.5 h-3.5 text-primary" />
+                    <span>{t('inspect_payload_btn')}</span>
+                  </Button>
+                )}
+                {isSettled && (
+                  <span className="text-emerald-500 text-[11px] font-mono flex items-center gap-1 font-semibold">
+                    {t('cleared_escrow_badge')}
+                  </span>
+                )}
+              </div>
 
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-muted-foreground">{t('clearing_price')}:</span>
-              <span className="text-primary font-bold tabular-nums">
-                {tender.currentLowestBid > 0 ? `${formatUSDC(tender.currentLowestBid)} USDC` : '---'}
-              </span>
-            </div>
+              {/* Settlement Triggers */}
+              <div className="flex items-center gap-2">
+                {isDelivered && (
+                  <Button
+                    size="sm"
+                    onClick={handleConfirm}
+                    disabled={isConfirming}
+                    className="h-8 text-xs font-mono font-medium gap-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{isConfirming ? t('confirming_payout') : t('confirm_payout_btn')}</span>
+                  </Button>
+                )}
 
-            <div className="pt-3 border-t border-border flex items-center gap-2.5">
-              {tender.deliveryPayload && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsOpen(true)}
-                  className="flex-1 h-8 text-xs font-mono border-border bg-background hover:bg-secondary/70 rounded-md transition-colors"
-                >
-                  <FileCode className="w-3.5 h-3.5 mr-1.5 text-primary shrink-0" />
-                  <span>{t('inspect_payload_btn')}</span>
-                </Button>
-              )}
-
-              {isDelivered && (
-                <Button
-                  size="sm"
-                  disabled={isConfirming}
-                  onClick={handleConfirm}
-                  className="flex-1 h-8 text-xs font-mono font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-                  <span>{isConfirming ? t('confirming_payout') : t('confirm_payout_btn')}</span>
-                </Button>
-              )}
-
-              {isSettled && (
-                <div className="flex-1 h-8 px-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-mono font-semibold flex items-center justify-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>{t('cleared_escrow_badge')}</span>
-                </div>
-              )}
+                {isDelivered && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleClaim}
+                    disabled={isClaiming}
+                    className="h-8 text-xs font-mono font-medium border border-border gap-1.5"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>{isClaiming ? t('claiming_payout') : t('claim_payout_btn')}</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Modal Dialog for Clean Structured Payload Viewing */}
+      {/* Modal Dialog for Deep Payload Inspection */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl bg-card border-border font-mono rounded-lg">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-bold flex items-center justify-between text-foreground">
-              <span className="flex items-center gap-2">
+        <DialogContent className="max-w-2xl font-mono text-xs bg-card border border-border shadow-xl rounded-lg p-0 overflow-hidden">
+          <DialogHeader className="p-4 sm:p-5 border-b border-border bg-card">
+            <DialogTitle className="flex items-center justify-between text-sm font-bold text-foreground">
+              <div className="flex items-center gap-2">
                 <FileCode className="w-4 h-4 text-primary" />
-                <span>{t('delivery_payload_title')} #{tender.id}</span>
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopy}
-                className="h-7 px-2 text-xs font-mono border border-border rounded"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                <span className="ml-1">{copied ? 'Copied' : 'Copy'}</span>
-              </Button>
+                <span>{t('delivery_payload_title')}</span>
+              </div>
+              <Badge variant="outline" className="text-[10px] border-border bg-secondary/50 font-normal">
+                Tender #{tender.id}
+              </Badge>
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
               {t('delivery_payload_desc')}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[60vh] overflow-y-auto space-y-3 font-mono text-xs">
+          <div className="p-4 sm:p-5 space-y-4 max-h-[60vh] overflow-y-auto bg-background/50">
             {parsedPayload && typeof parsedPayload === 'object' ? (
               <div className="space-y-3">
-                {parsedPayload.result && (
-                  <div className="p-3 rounded-md bg-secondary/50 border border-border">
-                    <span className="text-muted-foreground block mb-1 uppercase text-[10px] tracking-wider font-bold">
+                {parsedPayload.summary && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold block">
                       {t('result_summary')}
                     </span>
-                    <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                      {typeof parsedPayload.result === 'string'
-                        ? parsedPayload.result
-                        : JSON.stringify(parsedPayload.result, null, 2)}
-                    </p>
+                    <div className="p-3 rounded-md bg-secondary/40 border border-border text-foreground text-xs leading-relaxed">
+                      {parsedPayload.summary}
+                    </div>
                   </div>
                 )}
 
-                {parsedPayload.result?.extracted_metrics && (
-                  <div className="p-3 rounded-md bg-secondary/50 border border-border">
-                    <span className="text-muted-foreground block mb-1 uppercase text-[10px] tracking-wider font-bold">
+                {parsedPayload.metrics && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold block">
                       {t('execution_telemetry')}
                     </span>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      {Object.entries(parsedPayload.result.extracted_metrics).map(([k, v]) => (
-                        <div key={k} className="flex justify-between border-b border-border/50 py-1">
-                          <span className="text-muted-foreground">{k}:</span>
-                          <span className="text-foreground font-bold">{String(v)}</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                      {Object.entries(parsedPayload.metrics).map(([k, v]) => (
+                        <div key={k} className="p-2 rounded bg-secondary/30 border border-border">
+                          <span className="text-muted-foreground block text-[9px] uppercase">{k}</span>
+                          <span className="font-bold text-foreground tabular-nums">{String(v)}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                <div className="p-3 rounded-md bg-secondary/20 border border-border">
-                  <span className="text-muted-foreground block mb-1 uppercase text-[10px] tracking-wider font-bold">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">
                     {t('raw_verification_json')}
                   </span>
-                  <pre className="text-[11px] overflow-x-auto text-muted-foreground">
+                  <pre className="p-3 rounded-md bg-background border border-border text-[11px] overflow-x-auto leading-relaxed text-foreground">
                     {JSON.stringify(parsedPayload, null, 2)}
                   </pre>
                 </div>
               </div>
             ) : (
-              <pre className="p-3 rounded-md bg-secondary/50 border border-border overflow-x-auto text-foreground">
-                {tender.deliveryPayload || 'No payload'}
+              <pre className="p-3 rounded-md bg-background border border-border text-[11px] overflow-x-auto leading-relaxed text-foreground whitespace-pre-wrap">
+                {tender.deliveryPayload}
               </pre>
             )}
           </div>
 
-          <DialogFooter className="border-t border-border pt-3">
+          <DialogFooter className="p-3 sm:p-4 border-t border-border bg-card flex items-center justify-between sm:justify-between">
             <Button
-              variant="outline"
               size="sm"
-              onClick={() => setIsOpen(false)}
-              className="text-xs font-mono border-border rounded-md"
+              variant="outline"
+              onClick={handleCopy}
+              className="h-8 text-xs font-mono border-border gap-1.5"
             >
-              Close
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-emerald-500">{t('copied')}</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{t('copy')}</span>
+                </>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setIsOpen(false)}
+              className="h-8 text-xs font-mono border-border"
+            >
+              {t('close_btn')}
             </Button>
           </DialogFooter>
         </DialogContent>
