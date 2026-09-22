@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { TenderStatus } from '../types';
 
 export type Language = 'en' | 'zh';
 
@@ -70,6 +71,19 @@ export const DICTIONARY = {
     empty_tender_title: 'No Tender Selected',
     empty_tender_desc: 'Publish a reverse tender or select an existing one to observe live bids.',
     create_tender_btn: '+ New Tender',
+    seconds_unit: 'seconds',
+    entries_unit: 'entries',
+    floor_label: 'Floor',
+    step_label: 'Step',
+    creator_escrow: 'Creator Escrow',
+
+    // Status translations
+    status_open: 'Open (Bidding)',
+    status_awarded: 'Awarded',
+    status_delivered: 'Delivered (Challenge)',
+    status_settled: 'Settled',
+    status_cancelled: 'Cancelled',
+    status_expired: 'Expired',
 
     // Logs
     logs_title: 'Machine Telemetry Stream',
@@ -78,6 +92,7 @@ export const DICTIONARY = {
     waiting_logs: 'Listening to on-chain events and agent RPC feeds...',
 
     // Settlement
+    settlement_status_title: 'Settlement Status',
     settlement_finalized: 'Settlement Complete',
     settlement_verification: 'Delivery Verification',
     badge_settled: 'SETTLED',
@@ -94,6 +109,17 @@ export const DICTIONARY = {
     hide_payload: 'Hide Payload',
     copy: 'Copy',
     copied: 'Copied',
+    active_tender: 'Active Tender',
+    winning_node: 'Winning Node',
+    clearing_price: 'Clearing Price',
+    inspect_payload_btn: 'Inspect Payload',
+    cleared_escrow_badge: '✓ Cleared Escrow',
+    delivery_payload_title: 'Delivery Payload',
+    delivery_payload_desc: 'Cryptographically signed execution output submitted on-chain.',
+    result_summary: 'Result Summary',
+    execution_telemetry: 'Execution Telemetry',
+    raw_verification_json: 'Raw Verification JSON',
+    close_btn: 'Close',
 
     // Explorer Page
     explorer_title: 'Tender Explorer',
@@ -159,26 +185,26 @@ export const DICTIONARY = {
     block: '区块',
     gas_native: 'Gas: USDC',
     faucet_btn: '官方领水 ↗',
-    faucet_minting: '正在到账...',
-    faucet_success: '已领取 +100 USDC',
-    balance: '余额',
-    wallet_preset: '预置',
+    faucet_minting: '正在领水...',
+    faucet_success: '+100 USDC 领取成功',
+    balance: '可用余额',
+    wallet_preset: '预设',
     wallet_reown: 'Reown',
     wallet_connect: '连接钱包',
     wallet_disconnect: '断开连接',
 
     // Creator Form
-    create_title: '发起反向微招标',
-    create_desc: '在 Arc L1 上发布带 USDC 真实资金托管的反向竞拍单',
-    presets: '典型任务预设',
-    preset_financial: '微套利扫描',
-    preset_audit: '合约安全性验证',
-    preset_synthesis: '指标全景聚合',
-    prompt_label: '任务目标与 Prompt 需求',
-    prompt_placeholder: '输入需要智能体自主计算履约的任务内容...',
-    max_budget: '最高预算',
-    bidding_window: '竞价窗口',
-    exec_window: '交付窗口',
+    create_title: '发起逆向招标',
+    create_desc: '在 Arc L1 链上质押 USDC 托管并发起微型逆向拍卖',
+    presets: '快速模板',
+    preset_financial: '财务同比研判',
+    preset_audit: '合约安全审计',
+    preset_synthesis: '规范自动化提炼',
+    prompt_label: '任务目标 / Prompt',
+    prompt_placeholder: '明确计算目标或输入元数据 URI...',
+    max_budget: '最高限额 (USDC)',
+    bidding_window: '竞价窗口 (秒)',
+    exec_window: '交付窗口 (秒)',
     btn_publish: '托管 USDC 并全网广播招标单',
     broadcasting: '正在链上广播...',
     published_success: '招标单已发布',
@@ -210,6 +236,19 @@ export const DICTIONARY = {
     empty_tender_title: '未选择招标单',
     empty_tender_desc: '请在上方发起新招标单，或从历史下拉列表中选择以查看实时机器博弈。',
     create_tender_btn: '+ 发起新招标',
+    seconds_unit: '秒',
+    entries_unit: '条记录',
+    floor_label: '底价',
+    step_label: '步进',
+    creator_escrow: '需求方托管',
+
+    // Status translations
+    status_open: '竞价中 (Open)',
+    status_awarded: '已决标 (Awarded)',
+    status_delivered: '待挑战 (Delivered)',
+    status_settled: '已结清 (Settled)',
+    status_cancelled: '已取消 (Cancelled)',
+    status_expired: '已失效 (Expired)',
 
     // Logs
     logs_title: '机器博弈与推理时序日志',
@@ -218,6 +257,7 @@ export const DICTIONARY = {
     waiting_logs: '正在监听链上事件与智能体出价电报...',
 
     // Settlement
+    settlement_status_title: '清算与交割状态',
     settlement_finalized: '链上清算已完成',
     settlement_verification: '成果乐观交付验证',
     badge_settled: '已结清',
@@ -234,6 +274,17 @@ export const DICTIONARY = {
     hide_payload: '收起成果 Payload',
     copy: '复制',
     copied: '已复制',
+    active_tender: '当前招标单',
+    winning_node: '胜出节点',
+    clearing_price: '清算价格',
+    inspect_payload_btn: '检视交付成果',
+    cleared_escrow_badge: '✓ 托管已结清释放',
+    delivery_payload_title: '交付成果 Payload 详情',
+    delivery_payload_desc: '链上提交并包含密码学签名的计算输出结果。',
+    result_summary: '执行摘要',
+    execution_telemetry: '执行遥测指标',
+    raw_verification_json: '原始验证 JSON',
+    close_btn: '关闭',
 
     // Explorer Page
     explorer_title: '招标单浏览器',
@@ -291,12 +342,16 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: keyof typeof DICTIONARY['en']) => string;
+  getStatusText: (status: number | TenderStatus, fallback?: string) => string;
+  localizeLogMessage: (msg: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
   language: 'zh',
   setLanguage: () => {},
   t: (key) => DICTIONARY.zh[key] || key,
+  getStatusText: () => '',
+  localizeLogMessage: (msg) => msg,
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -319,8 +374,38 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return dict[key] || DICTIONARY.en[key] || key;
   };
 
+  const getStatusText = (status: number | TenderStatus, fallback?: string): string => {
+    const s = Number(status);
+    if (s === TenderStatus.OPEN) return t('status_open');
+    if (s === TenderStatus.AWARDED) return t('status_awarded');
+    if (s === TenderStatus.DELIVERED) return t('status_delivered');
+    if (s === TenderStatus.SETTLED) return t('status_settled');
+    if (s === TenderStatus.CANCELLED) return t('status_cancelled');
+    if (s === TenderStatus.EXPIRED) return t('status_expired');
+    return fallback || '';
+  };
+
+  const localizeLogMessage = (msg: string): string => {
+    if (language !== 'zh') return msg;
+
+    // Localize common telemetry log messages for Chinese UI
+    // e.g. "Bid accepted! Agent-Alpha leads at 0.004 USDC!"
+    let out = msg;
+    out = out.replace(/^Bid accepted!\s*/, '出价已采纳！');
+    out = out.replace(/^On-chain TX confirmed!\s*/, '链上交易已确认！');
+    out = out.replace(/\bleads at\b/, '以领先价');
+    out = out.replace(/Tender #(\d+) detected\. Max budget:\s*([0-9.]+)\s*USDC\. Bidding window:\s*(\d+)s\./, '检测到招标单 #$1，最高预算：$2 USDC，竞价窗口：$3 秒。');
+    out = out.replace(/Tender #(\d+) detected! Max budget:\s*([0-9.]+)\s*USDC/, '检测到招标单 #$1！最高预算：$2 USDC');
+    out = out.replace(/Tender #(\d+) AWARDED to ([^!]+)! Winning bid:\s*([0-9.]+)\s*USDC\. Generating execution payload\.\.\./, '招标单 #$1 决标给 $2！最终中标价：$3 USDC，正在生成交付物...');
+    out = out.replace(/Calculated competitive micro-bid:\s*([0-9.]+)\s*USDC\s*\(Margin:\s*(\d+%)\)\.\s*Submitting\.\.\./, '计算最优微出价：$1 USDC（边际利润：$2），提交中...');
+    out = out.replace(/Task fulfilled and delivered! Challenge window \(15s\) started\./, '任务计算完毕并已在链上交付！进入 15 秒乐观挑战期。');
+    out = out.replace(/Atomic settlement complete! Winner paid\s*([0-9.]+)\s*USDC\.\s*Creator refunded\s*([0-9.]+)\s*USDC savings\./, '原子清算完成！向胜出者支付 $1 USDC，向需求方退还节省资金 $2 USDC。');
+    out = out.replace(/Atomic settlement complete! Winner paid\s*([0-9.]+)\s*USDC\./, '原子清算完成！向胜出者支付 $1 USDC。');
+    return out;
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, getStatusText, localizeLogMessage }}>
       {children}
     </LanguageContext.Provider>
   );

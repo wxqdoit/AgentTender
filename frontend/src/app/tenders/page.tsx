@@ -39,7 +39,7 @@ import {
 } from '../../components/ui/select';
 
 export default function TendersPage() {
-  const { t } = useLanguage();
+  const { t, getStatusText } = useLanguage();
   const { activeAddress } = useWallet();
 
   const [tenders, setTenders] = useState<TenderData[]>([]);
@@ -200,7 +200,7 @@ export default function TendersPage() {
                               : 'bg-secondary text-foreground'
                           }`}
                         >
-                          {tItem.statusText}
+                          {getStatusText(tItem.status, tItem.statusText)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -228,9 +228,9 @@ export default function TendersPage() {
         <DialogContent className="max-w-2xl font-mono text-xs bg-card border-border rounded-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground">
-              <span>Tender #{selectedTender?.id}</span>
+              <span>{t('select_tender')} #{selectedTender?.id}</span>
               <Badge variant="outline" className="text-[10px] border-border">
-                {selectedTender?.statusText}
+                {selectedTender && getStatusText(selectedTender.status, selectedTender.statusText)}
               </Badge>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">

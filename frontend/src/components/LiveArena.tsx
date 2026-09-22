@@ -51,23 +51,24 @@ interface CustomTooltipProps {
 }
 
 function CustomChartTooltip({ active, payload }: CustomTooltipProps) {
+  const { t, getStatusText } = useLanguage();
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
       <div className="bg-card border border-border p-2.5 rounded-md shadow-md text-xs font-mono space-y-1 z-50">
         <div className="flex items-center justify-between gap-3 text-muted-foreground text-[10px] pb-1 border-b border-border">
-          <span>Step {data.step}: {data.label}</span>
+          <span>{t('step_label')} {data.step}: {data.label}</span>
           <span className="font-bold text-foreground">{data.bidder}</span>
         </div>
         <div className="flex items-center justify-between gap-4 pt-0.5">
-          <span className="text-muted-foreground">Price:</span>
+          <span className="text-muted-foreground">{t('clearing_price')}:</span>
           <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
             {formatUSDC(data.price)} USDC
           </span>
         </div>
         {data.savings && (
           <div className="flex items-center justify-between gap-4 text-[10px] text-muted-foreground">
-            <span>Saved:</span>
+            <span>{t('saved_ratio')}:</span>
             <span className="text-emerald-500 font-semibold">{data.savings}</span>
           </div>
         )}
@@ -78,7 +79,7 @@ function CustomChartTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProps) {
-  const { t } = useLanguage();
+  const { t, getStatusText } = useLanguage();
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [totalWindow, setTotalWindow] = useState<number>(35);
 
@@ -118,9 +119,9 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
     const points = [
       {
         step: 0,
-        label: 'Budget',
+        label: t('initial_budget'),
         price: tender.maxBudget,
-        bidder: 'Creator Escrow',
+        bidder: t('creator_escrow'),
         savings: '0%',
       },
     ];
@@ -130,7 +131,7 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
       const savedPct = tender.maxBudget > 0 ? ((savedAmount / tender.maxBudget) * 100).toFixed(1) + '%' : '0%';
       points.push({
         step: idx + 1,
-        label: `Bid #${idx + 1}`,
+        label: `${t('bids')} #${idx + 1}`,
         price: bid.bidAmount,
         bidder: bid.bidderName,
         savings: savedPct,
@@ -178,24 +179,24 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
     <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
       {/* Header Bar */}
       <CardHeader className="py-3 px-4 sm:px-5 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3 space-y-0 bg-card">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3.5 min-w-0">
           <motion.div
             key={tender.id}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="w-7 h-7 rounded bg-primary/10 border border-primary/30 flex items-center justify-center font-mono font-bold text-primary text-xs shrink-0"
+            className="h-8 px-3 rounded-md bg-secondary/80 border border-border flex items-center justify-center font-mono font-bold text-primary text-xs shrink-0 mx-1"
           >
             #{tender.id}
           </motion.div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <CardTitle className="font-mono font-bold text-xs tracking-wider text-foreground uppercase whitespace-nowrap">
-                {t('arena_title')}
-              </CardTitle>
+          <div className="min-w-0 flex flex-col gap-1">
+            <CardTitle className="font-mono font-bold text-xs tracking-wider text-foreground uppercase whitespace-nowrap">
+              {t('arena_title')}
+            </CardTitle>
+            <div>
               <Badge
                 variant={isSettled ? 'outline' : isBidding ? 'default' : 'secondary'}
-                className={`font-mono text-[10px] uppercase font-bold py-0 h-5 whitespace-nowrap border-border ${
+                className={`font-mono text-[10px] uppercase font-semibold py-0 px-2 h-5 whitespace-nowrap border-border ${
                   isBidding
                     ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
                     : isSettled
@@ -204,12 +205,9 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                 }`}
               >
                 {isBidding && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-ping inline-block" />}
-                {tender.statusText}
+                {getStatusText(tender.status, tender.statusText)}
               </Badge>
             </div>
-            <p className="text-[11px] text-muted-foreground font-mono truncate max-w-md sm:max-w-lg mt-0.5" title={tender.taskMetadataURI}>
-              {tender.taskMetadataURI}
-            </p>
           </div>
         </div>
 
@@ -317,7 +315,7 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
               >
                 {isSettled ? '0.0' : timeLeft.toFixed(1)}
               </motion.span>
-              <span className="text-xs text-muted-foreground">seconds</span>
+              <span className="text-xs text-muted-foreground">{t('seconds_unit')}</span>
             </div>
             {/* Flat Progress Indicator */}
             <div className="w-full bg-background border border-border h-1.5 rounded-full overflow-hidden">
@@ -337,10 +335,10 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
           <div className="flex items-center justify-between text-xs font-mono">
             <span className="font-semibold text-foreground flex items-center gap-1.5 whitespace-nowrap">
               <TrendingDown className="w-3.5 h-3.5 text-emerald-500" />
-              <span>{t('price_trajectory')} (Recharts Step Graph)</span>
+              <span>{t('price_trajectory')}</span>
             </span>
             <span className="text-[10px] text-muted-foreground tabular-nums whitespace-nowrap">
-              {formatUSDC(tender.maxBudget)} &rarr; {formatUSDC(tender.currentLowestBid)} USDC ({chartData.length - 1} steps)
+              {formatUSDC(tender.maxBudget)} &rarr; {formatUSDC(tender.currentLowestBid)} USDC ({chartData.length - 1} {t('step_label')})
             </span>
           </div>
 
@@ -383,7 +381,7 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
                     stroke="#10B981"
                     strokeDasharray="3 3"
                     label={{
-                      value: `Floor: ${formatUSDC(tender.currentLowestBid)}`,
+                      value: `${t('floor_label')}: ${formatUSDC(tender.currentLowestBid)}`,
                       fill: '#10B981',
                       fontSize: 10,
                       fontFamily: 'monospace',
@@ -422,7 +420,7 @@ export function LiveArena({ tender, tendersList, onSelectTender }: LiveArenaProp
           <div className="flex items-center justify-between text-[11px] font-mono font-semibold text-muted-foreground uppercase tracking-wider">
             <span>{t('bids_timeline')}:</span>
             <span className="text-[10px] text-muted-foreground lowercase font-normal">
-              {tender.bids.length} entries
+              {tender.bids.length} {t('entries_unit')}
             </span>
           </div>
 

@@ -38,7 +38,7 @@ export function SettlementDrawer({
   onSettled,
   onRefreshBalance,
 }: SettlementDrawerProps) {
-  const { t } = useLanguage();
+  const { t, getStatusText } = useLanguage();
   const { isConnected, openReownModal } = useWallet();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -118,11 +118,11 @@ export function SettlementDrawer({
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 text-foreground">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span>Settlement Status</span>
+                <span>{t('settlement_status_title')}</span>
               </CardTitle>
               <Badge
                 variant="outline"
-                className={`font-mono text-[10px] uppercase border-border ${
+                className={`font-mono text-[10px] uppercase border-border px-2 py-0.5 ${
                   isSettled
                     ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
                     : isDelivered
@@ -130,42 +130,42 @@ export function SettlementDrawer({
                     : 'bg-secondary/50 text-muted-foreground'
                 }`}
               >
-                {tender.statusText || tender.status}
+                {getStatusText(tender.status, tender.statusText)}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-5 space-y-3">
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-muted-foreground">Active Tender:</span>
+              <span className="text-muted-foreground">{t('active_tender')}:</span>
               <span className="text-foreground font-bold">#{tender.id}</span>
             </div>
 
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-muted-foreground">Winning Node:</span>
+              <span className="text-muted-foreground">{t('winning_node')}:</span>
               <span className="text-foreground font-medium">
-                {tender.lowestBidder && tender.lowestBidder !== '0x0000000000000000000000000000000000000000'
+                {tender.lowestBidderName || (tender.lowestBidder && tender.lowestBidder !== '0x0000000000000000000000000000000000000000'
                   ? `${tender.lowestBidder.slice(0, 8)}...${tender.lowestBidder.slice(-6)}`
-                  : '---'}
+                  : '---')}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-muted-foreground">Clearing Price:</span>
+              <span className="text-muted-foreground">{t('clearing_price')}:</span>
               <span className="text-primary font-bold tabular-nums">
                 {tender.currentLowestBid > 0 ? `${formatUSDC(tender.currentLowestBid)} USDC` : '---'}
               </span>
             </div>
 
-            <div className="pt-2 flex items-center gap-2">
+            <div className="pt-3 border-t border-border flex items-center gap-2.5">
               {tender.deliveryPayload && (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setIsOpen(true)}
-                  className="flex-1 h-8 text-xs font-mono border-border bg-secondary/40 hover:bg-secondary rounded-md"
+                  className="flex-1 h-8 text-xs font-mono border-border bg-background hover:bg-secondary/70 rounded-md transition-colors"
                 >
-                  <FileCode className="w-3.5 h-3.5 mr-1 text-primary" />
-                  <span>Inspect Payload</span>
+                  <FileCode className="w-3.5 h-3.5 mr-1.5 text-primary shrink-0" />
+                  <span>{t('inspect_payload_btn')}</span>
                 </Button>
               )}
 
@@ -174,17 +174,18 @@ export function SettlementDrawer({
                   size="sm"
                   disabled={isConfirming}
                   onClick={handleConfirm}
-                  className="flex-1 h-8 text-xs font-mono font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md"
+                  className="flex-1 h-8 text-xs font-mono font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                  <span>{isConfirming ? 'Confirming...' : 'Confirm Delivery'}</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span>{isConfirming ? t('confirming_payout') : t('confirm_payout_btn')}</span>
                 </Button>
               )}
 
               {isSettled && (
-                <Badge variant="outline" className="w-full justify-center h-8 bg-emerald-500/10 text-emerald-500 border-emerald-500/30 text-xs font-mono rounded-md">
-                  ✓ Cleared Escrow
-                </Badge>
+                <div className="flex-1 h-8 px-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-mono font-semibold flex items-center justify-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{t('cleared_escrow_badge')}</span>
+                </div>
               )}
             </div>
           </CardContent>
@@ -198,7 +199,7 @@ export function SettlementDrawer({
             <DialogTitle className="text-sm font-bold flex items-center justify-between text-foreground">
               <span className="flex items-center gap-2">
                 <FileCode className="w-4 h-4 text-primary" />
-                <span>Delivery Payload #{tender.id}</span>
+                <span>{t('delivery_payload_title')} #{tender.id}</span>
               </span>
               <Button
                 variant="ghost"
@@ -211,7 +212,7 @@ export function SettlementDrawer({
               </Button>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Cryptographically signed execution output submitted on-chain.
+              {t('delivery_payload_desc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -221,7 +222,7 @@ export function SettlementDrawer({
                 {parsedPayload.result && (
                   <div className="p-3 rounded-md bg-secondary/50 border border-border">
                     <span className="text-muted-foreground block mb-1 uppercase text-[10px] tracking-wider font-bold">
-                      Result Summary
+                      {t('result_summary')}
                     </span>
                     <p className="text-foreground leading-relaxed whitespace-pre-wrap">
                       {typeof parsedPayload.result === 'string'
@@ -234,7 +235,7 @@ export function SettlementDrawer({
                 {parsedPayload.result?.extracted_metrics && (
                   <div className="p-3 rounded-md bg-secondary/50 border border-border">
                     <span className="text-muted-foreground block mb-1 uppercase text-[10px] tracking-wider font-bold">
-                      Execution Telemetry
+                      {t('execution_telemetry')}
                     </span>
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                       {Object.entries(parsedPayload.result.extracted_metrics).map(([k, v]) => (
@@ -249,7 +250,7 @@ export function SettlementDrawer({
 
                 <div className="p-3 rounded-md bg-secondary/20 border border-border">
                   <span className="text-muted-foreground block mb-1 uppercase text-[10px] tracking-wider font-bold">
-                    Raw Verification JSON
+                    {t('raw_verification_json')}
                   </span>
                   <pre className="text-[11px] overflow-x-auto text-muted-foreground">
                     {JSON.stringify(parsedPayload, null, 2)}

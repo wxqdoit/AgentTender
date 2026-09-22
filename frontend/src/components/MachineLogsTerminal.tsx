@@ -21,7 +21,7 @@ interface MachineLogsTerminalProps {
 }
 
 export function MachineLogsTerminal({ logs }: MachineLogsTerminalProps) {
-  const { t } = useLanguage();
+  const { t, localizeLogMessage } = useLanguage();
   const [filterAgent, setFilterAgent] = useState<string>('all');
   const [autoScroll, setAutoScroll] = useState<boolean>(true);
 
@@ -105,20 +105,33 @@ export function MachineLogsTerminal({ logs }: MachineLogsTerminalProps) {
                     initial={idx < 4 ? { opacity: 0, y: -4 } : false}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="flex items-start gap-1.5 hover:bg-secondary/40 px-1.5 py-0.5 rounded transition-colors"
+                    className="flex items-start gap-2 hover:bg-secondary/40 p-1.5 rounded transition-colors border-b border-border/40 last:border-0"
                   >
-                    <span className="text-muted-foreground select-none shrink-0 text-[10px]">[{timeStr}]</span>
-                    <span
-                      className={`px-1 rounded border text-[9px] font-bold uppercase shrink-0 ${getActionColor(
-                        log.action
-                      )}`}
-                    >
-                      {log.action}
-                    </span>
-                    <span className="text-primary font-semibold shrink-0 text-[10px]">
-                      [{log.agentName}]:
-                    </span>
-                    <span className="text-foreground break-all text-[11px]">{log.message}</span>
+                    {/* Left block: Agent name, badge & time underneath */}
+                    <div className="flex flex-col items-start gap-0.5 shrink-0 min-w-[96px]">
+                      <div className="flex items-center gap-1">
+                        <span
+                          className={`px-1 rounded border text-[9px] font-bold uppercase shrink-0 leading-tight ${getActionColor(
+                            log.action
+                          )}`}
+                        >
+                          {log.action}
+                        </span>
+                        <span className="text-primary font-semibold text-[11px] truncate max-w-[70px]" title={log.agentName}>
+                          {log.agentName}
+                        </span>
+                      </div>
+                      <span className="text-muted-foreground select-none text-[9px] tabular-nums pl-0.5">
+                        {timeStr}
+                      </span>
+                    </div>
+
+                    {/* Right block: log message */}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <p className="text-foreground text-[11px] leading-relaxed break-words">
+                        {localizeLogMessage(log.message)}
+                      </p>
+                    </div>
                   </motion.div>
                 );
               })}
