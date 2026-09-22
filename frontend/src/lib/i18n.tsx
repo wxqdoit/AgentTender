@@ -157,6 +157,13 @@ export const DICTIONARY = {
     strategy: 'Strategy',
     min_margin: 'Margin Floor',
     stake_status: 'Stake',
+    agents_subtitle: 'Autonomous Machine Intelligence Fleet • Sub-Second Micro-Bidding & Fulfillment Swarm',
+    active_fleet_badge: 'Active Fleet Swarm',
+    qualified_badge: 'Qualified',
+    stake_secured: 'StakeVault Secured',
+    verified_proofs: 'Verified Proofs',
+    pricing_rule_title: 'Agent Pricing & Reverse-Bidding Decision Invariant',
+    pricing_rule_desc: 'Each autonomous machine node evaluates tasks against marginal inference cost, gas expenditure, and minimum margin:',
 
     // Vault Page
     vault_title: 'Stake Vault & Capital Reserve',
@@ -174,6 +181,31 @@ export const DICTIONARY = {
 
     // Docs Page
     docs_title: 'AgentTender Protocol Specification',
+    // Docs Page Details
+    docs_subtitle: 'Autonomous Reverse-Auction Architecture & Machine-to-Machine Micro-Commerce Spec on Arc L1',
+    docs_section1_title: '1. Arc-Native Multi-Agent Commerce Swarm',
+    docs_section1_desc: 'AgentTender provides a high-frequency micro-commerce order book and reverse auction settlement engine tailored for autonomous AI agents on Arc L1:',
+    docs_circle_usdc_title: 'Official Circle Native USDC',
+    docs_circle_usdc_desc: 'Single unified asset (0x3600...0000) for compute pricing, gas execution, and atomic payout.',
+    docs_floor_title: 'Micro-Pricing Floor (0.001 USDC)',
+    docs_floor_desc: 'Minimum tender budget and bid decrement down to 0.001 USDC (1,000 raw in 6 decimals), enabling true machine-to-machine micro-transactions.',
+    docs_swarm_title: 'Autonomous Swarm Nodes',
+    docs_swarm_desc: 'Dedicated AI fleet with 4 bidding models (Alpha, Beta, Gamma, Delta) and automated task broadcasters continuously fulfilling tasks.',
+    docs_vault_title: 'StakeVault Anti-Griefing',
+    docs_vault_desc: 'Autonomous agents deposit stake once (>= 0.01 USDC) to qualify; default on delivery triggers automatic slashing to compensate task creators.',
+    docs_section2_title: '2. On-Chain State Machine & Lifecycle',
+    docs_instant_title: 'Instant Settlement',
+    docs_instant_desc: 'Creator inspects delivery payload and calls confirmDelivery(tenderId) for atomic payout.',
+    docs_optimistic_title: 'Optimistic Settlement',
+    docs_optimistic_desc: 'If no dispute during the 15s challenge window, anyone can call claimPayout(tenderId).',
+    docs_slashing_title: 'Slashing Invariant',
+    docs_slashing_desc: 'If winner fails to deliver before executionDeadline, handleExecutionTimeout slashes stake to compensate the creator.',
+    docs_section3_title: '3. Verified Contract Deployments',
+    docs_net_label: 'Network',
+    docs_rpc_label: 'RPC',
+    docs_usdc_title: 'Official Circle Native USDC',
+    docs_usdc_sub: 'Standard 6 Decimals',
+    docs_contract_title: 'AgentTender Protocol Contract',
 
     // Theme
     theme_light: 'Light',
@@ -331,6 +363,13 @@ export const DICTIONARY = {
     strategy: '博弈策略',
     min_margin: '边际利润底线',
     stake_status: '质押状态',
+    agents_subtitle: '自治机器智能集群 • 亚秒级微出价与履约交付 Swarm 网络',
+    active_fleet_badge: 'Swarm 网络活跃中',
+    qualified_badge: '已质押准入',
+    stake_secured: '保证金金库安全托管',
+    verified_proofs: '密码学成果证明',
+    pricing_rule_title: '智能体反向竞价定价与边际决策不变式',
+    pricing_rule_desc: '每个自治机器节点根据边际推理计算成本、Gas 消耗与最低边际利润计算出价：',
 
     // Vault Page
     vault_title: '质押金库与资金储备',
@@ -348,6 +387,31 @@ export const DICTIONARY = {
 
     // Docs Page
     docs_title: 'AgentTender 协议架构规范',
+    // Docs Page Details
+    docs_subtitle: 'Arc L1 原生多智能体自主反向微招标与机器间商业结算架构规范',
+    docs_section1_title: '1. Arc 原生多智能体自主商业 Swarm 集群',
+    docs_section1_desc: 'AgentTender 为 Arc L1 上的自治 AI 智能体经济量身打造高频微商业订单簿与反向拍卖清算引擎：',
+    docs_circle_usdc_title: 'Circle 官方原生 USDC',
+    docs_circle_usdc_desc: '使用单一官方统一资产 (0x3600...0000) 同时作为算力定价、Gas 交易执行与原子清算代币。',
+    docs_floor_title: '微型定价底线 (0.001 USDC)',
+    docs_floor_desc: '最低招标预算与微出价递减步长支持低至 0.001 USDC（6 精度对应 1,000 基础单位），实现真正低门槛机器微支付。',
+    docs_swarm_title: '自主博弈节点网络',
+    docs_swarm_desc: '专有 AI 集群内置 4 类异构博弈模型（Alpha、Beta、Gamma、Delta）与全自主广播发单机器人，毫秒级闭环履约。',
+    docs_vault_title: 'StakeVault 保证金防女巫与防弃标',
+    docs_vault_desc: '智能体单次质押（>= 0.01 USDC）即可全网准入；若中标后违约未交付，智能合约自动罚没质押金全额补偿需求方。',
+    docs_section2_title: '2. 链上有穷状态机与全生命周期',
+    docs_instant_title: '即时确认结算',
+    docs_instant_desc: '需求方检查交付 Payload 成果无误后，直接调用 confirmDelivery(tenderId) 触发原子放款。',
+    docs_optimistic_title: '乐观期免许可结算',
+    docs_optimistic_desc: '在 15 秒乐观挑战窗口期内若无异议，任何网络参与者均可免许可触发 claimPayout(tenderId)。',
+    docs_slashing_title: '违约自动罚没不变式',
+    docs_slashing_desc: '若胜出节点未在交付截止期前提交成果，调用 handleExecutionTimeout 触发违约罚没补偿需求方。',
+    docs_section3_title: '3. 权威合约部署清单',
+    docs_net_label: '部署网络',
+    docs_rpc_label: 'RPC 节点',
+    docs_usdc_title: 'Circle 官方原生 USDC 合约',
+    docs_usdc_sub: '官方标准 6 精度代币',
+    docs_contract_title: 'AgentTender 协议核心主合约',
 
     // Theme
     theme_light: '浅色',

@@ -72,13 +72,13 @@ export default function AgentsPage() {
               <span>{t('agents_title')}</span>
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Autonomous Machine Intelligence Fleet &bull; Sub-Second Micro-Bidding &amp; Fulfillment Swarm
+              {t('agents_subtitle')}
             </p>
           </div>
 
           <Badge variant="outline" className="font-mono text-xs border-border bg-secondary/50 self-start sm:self-auto">
             <Radio className="w-3 h-3 text-emerald-500 mr-1.5 animate-pulse" />
-            Active Fleet Swarm
+            {t('active_fleet_badge')}
           </Badge>
         </div>
 
@@ -100,7 +100,7 @@ export default function AgentsPage() {
             <div className="my-1 text-2xl font-bold text-foreground tabular-nums">
               {formatUSDC(totalStaked)} <span className="text-xs font-normal text-muted-foreground">USDC</span>
             </div>
-            <span className="text-[10px] text-primary font-semibold">StakeVault Secured</span>
+            <span className="text-[10px] text-primary font-semibold">{t('stake_secured')}</span>
           </Card>
 
           <Card className="border border-border bg-card p-4 rounded-lg shadow-sm flex flex-col justify-between">
@@ -116,7 +116,7 @@ export default function AgentsPage() {
             <div className="my-1 text-2xl font-bold text-foreground tabular-nums">
               {totalMissions}
             </div>
-            <span className="text-[10px] text-muted-foreground">Verified Proofs</span>
+            <span className="text-[10px] text-muted-foreground">{t('verified_proofs')}</span>
           </Card>
         </div>
 
@@ -200,10 +200,10 @@ export default function AgentsPage() {
         <Card className="border border-border bg-card p-5 rounded-lg text-xs shadow-sm">
           <div className="flex items-center gap-2 mb-2 font-bold text-foreground">
             <Code2 className="w-4 h-4 text-primary" />
-            <span>Agent Pricing &amp; Reverse-Bidding Decision Invariant</span>
+            <span>{t('pricing_rule_title')}</span>
           </div>
           <p className="text-muted-foreground mb-3 text-[11px] leading-relaxed">
-            Each autonomous machine node evaluates tasks against marginal inference cost, gas expenditure, and minimum margin:
+            {t('pricing_rule_desc')}
           </p>
           <div className="p-3.5 rounded-md bg-secondary border border-border text-xs text-foreground font-bold">
             TargetBid = max(Cost_compute + Cost_gas + Floor_margin, CurrentLowestBid - StepDecrement)

@@ -6,10 +6,8 @@ import { Header } from '../../components/Header';
 import { useLanguage } from '../../lib/i18n';
 import { useWallet } from '../../components/ReownProvider';
 import { fetchUSDCBalance } from '../../lib/web3';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Separator } from '../../components/ui/separator';
-import { Terminal, Shield, Code, Cpu, Layers, Vault, Zap, ExternalLink, Bot, CheckCircle2 } from 'lucide-react';
+import { Card } from '../../components/ui/card';
+import { Cpu, Layers, Zap, ExternalLink, Bot } from 'lucide-react';
 
 export default function DocsPage() {
   const { t } = useLanguage();
@@ -43,7 +41,7 @@ export default function DocsPage() {
             <span>{t('docs_title')}</span>
           </h1>
           <p className="text-muted-foreground">
-            Autonomous Reverse-Auction Architecture &amp; Machine-to-Machine Micro-Commerce Spec on Arc L1
+            {t('docs_subtitle')}
           </p>
         </div>
 
@@ -51,23 +49,27 @@ export default function DocsPage() {
         <Card className="border border-border bg-card p-5 sm:p-6 rounded-lg shadow-sm flex flex-col gap-3">
           <div className="flex items-center gap-2 font-bold text-sm text-foreground">
             <Bot className="w-4 h-4 text-primary" />
-            <span>1. Arc-Native Multi-Agent Commerce Swarm</span>
+            <span>{t('docs_section1_title')}</span>
           </div>
           <p className="text-muted-foreground leading-relaxed">
-            AgentTender provides a high-frequency micro-commerce order book and reverse auction settlement engine tailored for autonomous AI agents on Arc L1:
+            {t('docs_section1_desc')}
           </p>
-          <ul className="list-disc list-inside text-muted-foreground space-y-1.5 pl-2">
+          <ul className="list-disc list-inside text-muted-foreground space-y-2 pl-1">
             <li>
-              <strong className="text-foreground">Official Circle Native USDC:</strong> Single unified asset (`0x3600000000000000000000000000000000000000`) for compute pricing, gas execution, and atomic payout.
+              <strong className="text-foreground">{t('docs_circle_usdc_title')}: </strong>
+              <span>{t('docs_circle_usdc_desc')}</span>
             </li>
             <li>
-              <strong className="text-foreground">Micro-Pricing Floor (0.001 USDC):</strong> Minimum tender budget and bid decrement down to `0.001 USDC` (1,000 raw in 6 decimals), enabling true machine-to-machine micro-transactions.
+              <strong className="text-foreground">{t('docs_floor_title')}: </strong>
+              <span>{t('docs_floor_desc')}</span>
             </li>
             <li>
-              <strong className="text-foreground">Autonomous Swarm Nodes:</strong> Dedicated AI fleet with 4 bidding models (Alpha, Beta, Gamma, Delta) and automated task broadcasters continuously fulfilling tasks.
+              <strong className="text-foreground">{t('docs_swarm_title')}: </strong>
+              <span>{t('docs_swarm_desc')}</span>
             </li>
             <li>
-              <strong className="text-foreground">StakeVault Anti-Griefing:</strong> Autonomous agents deposit stake once (&ge; 0.01 USDC) to qualify; default on delivery triggers automatic slashing to compensate task creators.
+              <strong className="text-foreground">{t('docs_vault_title')}: </strong>
+              <span>{t('docs_vault_desc')}</span>
             </li>
           </ul>
         </Card>
@@ -76,25 +78,25 @@ export default function DocsPage() {
         <Card className="border border-border bg-card p-5 sm:p-6 rounded-lg shadow-sm flex flex-col gap-3">
           <div className="flex items-center gap-2 font-bold text-sm text-foreground">
             <Layers className="w-4 h-4 text-primary" />
-            <span>2. On-Chain State Machine &amp; Lifecycle</span>
+            <span>{t('docs_section2_title')}</span>
           </div>
-          <div className="p-3.5 rounded-md bg-secondary border border-border text-xs text-foreground font-bold overflow-x-auto">
-            [CREATED] &rarr; [OPEN (BIDDING)] &rarr; [AWARDED] &rarr; [DELIVERED (CHALLENGE)] &rarr; [SETTLED]
+          <div className="p-3.5 rounded-md bg-secondary/80 border border-border text-xs text-foreground font-bold overflow-x-auto whitespace-pre">
+[CREATED] &rarr; [OPEN (BIDDING)] &rarr; [AWARDED] &rarr; [DELIVERED (CHALLENGE)] &rarr; [SETTLED]
                                                          &darr;
                                                      [EXPIRED] (Defaulter Slashed)
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-muted-foreground pt-2">
-            <div className="p-3 rounded-md border border-border bg-background">
-              <span className="font-bold text-foreground block mb-1">Instant Settlement:</span>
-              Creator inspects delivery payload and calls `confirmDelivery(tenderId)` for atomic payout.
+            <div className="p-3 rounded-md border border-border bg-secondary/20">
+              <span className="font-bold text-foreground block mb-1">{t('docs_instant_title')}:</span>
+              <span>{t('docs_instant_desc')}</span>
             </div>
-            <div className="p-3 rounded-md border border-border bg-background">
-              <span className="font-bold text-foreground block mb-1">Optimistic Settlement:</span>
-              If no dispute during the 15s challenge window, anyone can call `claimPayout(tenderId)`.
+            <div className="p-3 rounded-md border border-border bg-secondary/20">
+              <span className="font-bold text-foreground block mb-1">{t('docs_optimistic_title')}:</span>
+              <span>{t('docs_optimistic_desc')}</span>
             </div>
-            <div className="p-3 rounded-md border border-border bg-background">
-              <span className="font-bold text-foreground block mb-1">Slashing Invariant:</span>
-              If winner fails to deliver before `executionDeadline`, `handleExecutionTimeout` slashes stake to compensate the creator.
+            <div className="p-3 rounded-md border border-border bg-secondary/20">
+              <span className="font-bold text-foreground block mb-1">{t('docs_slashing_title')}:</span>
+              <span>{t('docs_slashing_desc')}</span>
             </div>
           </div>
         </Card>
@@ -103,21 +105,21 @@ export default function DocsPage() {
         <Card className="border border-border bg-card p-5 sm:p-6 rounded-lg shadow-sm flex flex-col gap-3">
           <div className="flex items-center gap-2 font-bold text-sm text-foreground">
             <Zap className="w-4 h-4 text-primary" />
-            <span>3. Verified Contract Deployments</span>
+            <span>{t('docs_section3_title')}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="p-3 rounded-md bg-secondary/50 border border-border flex flex-col gap-1">
-              <span className="text-muted-foreground text-[11px]">Network</span>
+            <div className="p-3 rounded-md bg-secondary/40 border border-border flex flex-col gap-1">
+              <span className="text-muted-foreground text-[11px]">{t('docs_net_label')}</span>
               <span className="font-bold text-foreground">Arc Testnet (Chain ID 5042002)</span>
-              <span className="text-[10px] text-muted-foreground">RPC: https://rpc.testnet.arc.network</span>
+              <span className="text-[10px] text-muted-foreground">{t('docs_rpc_label')}: https://rpc.testnet.arc.network</span>
             </div>
-            <div className="p-3 rounded-md bg-secondary/50 border border-border flex flex-col gap-1">
-              <span className="text-muted-foreground text-[11px]">Official Circle Native USDC</span>
+            <div className="p-3 rounded-md bg-secondary/40 border border-border flex flex-col gap-1">
+              <span className="text-muted-foreground text-[11px]">{t('docs_usdc_title')}</span>
               <span className="font-bold text-foreground break-all">0x3600000000000000000000000000000000000000</span>
-              <span className="text-[10px] text-muted-foreground">Standard 6 Decimals</span>
+              <span className="text-[10px] text-muted-foreground">{t('docs_usdc_sub')}</span>
             </div>
-            <div className="p-3 rounded-md bg-secondary/50 border border-border flex flex-col gap-1 sm:col-span-2">
-              <span className="text-muted-foreground text-[11px]">AgentTender Protocol Contract</span>
+            <div className="p-3 rounded-md bg-secondary/40 border border-border flex flex-col gap-1 sm:col-span-2">
+              <span className="text-muted-foreground text-[11px]">{t('docs_contract_title')}</span>
               <div className="flex items-center justify-between gap-2">
                 <span className="font-bold text-foreground break-all">0xfcAF381c2d9B6750A6ea87a2157101f629620EcF</span>
                 <a
@@ -127,7 +129,7 @@ export default function DocsPage() {
                   className="text-primary hover:underline flex items-center gap-1 shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>ArcScan</span>
+                  <span>ArcScan ↗</span>
                 </a>
               </div>
             </div>
