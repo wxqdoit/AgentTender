@@ -98,26 +98,26 @@ export default function DocsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="p-3 rounded-md bg-secondary/40 border border-border flex flex-col gap-1">
               <span className="text-muted-foreground text-[11px]">{t('docs_net_label')}</span>
-              <span className="font-bold text-foreground">Arc Testnet (Chain ID 5042002)</span>
-              <span className="text-[10px] text-muted-foreground">{t('docs_rpc_label')}: https://rpc.testnet.arc.network</span>
+              <span className="font-bold text-foreground">Arc Mainnet (Chain ID {CONFIG.CHAIN_ID})</span>
+              <span className="text-[10px] text-muted-foreground">{t('docs_rpc_label')}: {CONFIG.RPC_URL}</span>
             </div>
             <div className="p-3 rounded-md bg-secondary/40 border border-border flex flex-col gap-1">
               <span className="text-muted-foreground text-[11px]">{t('docs_usdc_title')}</span>
-              <span className="font-bold text-foreground break-all">0x3600000000000000000000000000000000000000</span>
+              <span className="font-bold text-foreground break-all">{CONFIG.USDC_ADDRESS}</span>
               <span className="text-[10px] text-muted-foreground">{t('docs_usdc_sub')}</span>
             </div>
             <div className="p-3 rounded-md bg-secondary/40 border border-border flex flex-col gap-1 sm:col-span-2">
               <span className="text-muted-foreground text-[11px]">{t('docs_contract_title')}</span>
               <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-foreground break-all">0xfcAF381c2d9B6750A6ea87a2157101f629620EcF</span>
+                <span className="font-bold text-foreground break-all">{CONFIG.TENDER_ADDRESS}</span>
                 <a
-                  href="https://testnet.arcscan.app/address/0xfcAF381c2d9B6750A6ea87a2157101f629620EcF"
+                  href={`${CONFIG.EXPLORER_URL}/address/${CONFIG.TENDER_ADDRESS}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-primary hover:underline flex items-center gap-1 shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>ArcScan ↗</span>
+                  <span>Explorer ↗</span>
                 </a>
               </div>
             </div>

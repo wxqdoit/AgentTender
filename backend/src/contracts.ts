@@ -2,6 +2,7 @@ import {
   createPublicClient,
   createWalletClient,
   http,
+  fallback,
   formatUnits,
   parseUnits,
   type PublicClient,
@@ -30,13 +31,27 @@ export const customChain = defineChain({
   name: CONFIG.CHAIN_ID === 31337 ? 'Local Arc Devnet' : 'Arc Mainnet',
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: {
-    default: { http: [CONFIG.RPC_URL] },
+    default: {
+      http: [
+        CONFIG.RPC_URL,
+        'https://rpc.mainnet.arc.io',
+        'https://rpc.blockdaemon.mainnet.arc.io',
+        'https://rpc.quicknode.mainnet.arc.io',
+      ],
+    },
   },
 });
 
+const rpcTransports = [
+  http(CONFIG.RPC_URL, { retryCount: 3, retryDelay: 1000 }),
+  http('https://rpc.mainnet.arc.io', { retryCount: 3, retryDelay: 1000 }),
+  http('https://rpc.blockdaemon.mainnet.arc.io', { retryCount: 3, retryDelay: 1000 }),
+  http('https://rpc.quicknode.mainnet.arc.io', { retryCount: 3, retryDelay: 1000 }),
+];
+
 export const publicClient = createPublicClient({
   chain: customChain,
-  transport: http(CONFIG.RPC_URL, { retryCount: 5, retryDelay: 1500, timeout: 20000 }),
+  transport: fallback(rpcTransports),
 });
 
 export function getWalletClient(privateKey: `0x${string}`) {
@@ -44,7 +59,7 @@ export function getWalletClient(privateKey: `0x${string}`) {
   return createWalletClient({
     account,
     chain: customChain,
-    transport: http(CONFIG.RPC_URL),
+    transport: fallback(rpcTransports),
   });
 }
 

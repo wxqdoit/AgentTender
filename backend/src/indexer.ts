@@ -105,6 +105,23 @@ export class TenderIndexer extends EventEmitter {
     }
   }
 
+  public async syncAllFromChain() {
+    if (!CONFIG.TENDER_ADDRESS) return;
+    try {
+      const count = (await publicClient.readContract({
+        address: CONFIG.TENDER_ADDRESS,
+        abi: AGENT_TENDER_ABI,
+        functionName: 'tenderCounter',
+      })) as bigint;
+
+      for (let i = 1; i <= Number(count); i++) {
+        await this.syncTenderFromChain(i);
+      }
+    } catch (err) {
+      console.error('Error syncing all tenders from chain:', err);
+    }
+  }
+
   public async syncTenderFromChain(tenderId: number) {
     if (!CONFIG.TENDER_ADDRESS) return;
     try {

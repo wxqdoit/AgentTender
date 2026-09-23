@@ -9,12 +9,12 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 export const CONFIG = {
   PORT: parseInt(process.env.PORT || '3001', 10),
-  RPC_URL: process.env.RPC_URL || 'https://rpc.testnet.arc.network',
-  CHAIN_ID: parseInt(process.env.CHAIN_ID || '5042002', 10),
+  RPC_URL: process.env.RPC_URL || 'https://rpc.mainnet.arc.io',
+  CHAIN_ID: parseInt(process.env.CHAIN_ID || '5042', 10),
   USDC_ADDRESS: (process.env.USDC_ADDRESS || '0x3600000000000000000000000000000000000000') as `0x${string}`,
-  TENDER_ADDRESS: (process.env.TENDER_ADDRESS || '0xfcAF381c2d9B6750A6ea87a2157101f629620EcF') as `0x${string}`,
+  TENDER_ADDRESS: (process.env.TENDER_ADDRESS || '0xbd457320e53e09507985e94edf1729e1a29c45d8') as `0x${string}`,
   DEPLOYER_PRIVATE_KEY: (process.env.DEPLOYER_PRIVATE_KEY ||
-    '0x9c2b4ffed466f4ddc1d102f3c1706802f65ade2421fb138e99a7201991772f08') as `0x${string}`,
+    '0x439ae3b7b27b5ef004f78e629a7011771a5101ea3ff51aa5e03c27ded94a0385') as `0x${string}`,
   AGENTS: {
     ALPHA: {
       id: 'agent-alpha',

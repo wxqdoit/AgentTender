@@ -107,7 +107,7 @@ export function Header({ blockNumber: propBlockNumber }: HeaderProps = {}) {
 
   const handleOpenExplorer = () => {
     if (activeAddress) {
-      window.open(`https://testnet.arcscan.app/address/${activeAddress}`, '_blank');
+      window.open(`${CONFIG.EXPLORER_URL}/address/${activeAddress}`, '_blank');
     }
   };
 

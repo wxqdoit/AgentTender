@@ -21,6 +21,7 @@ export class AgentFleet {
   private agents: Map<string, AgentInternal> = new Map();
   private isInitialized: boolean = false;
   private activeTimers: Map<string, NodeJS.Timeout[]> = new Map();
+  private lastPolledCounter: number = 0;
 
   constructor() {
     this.setupAgents();
@@ -89,6 +90,7 @@ export class AgentFleet {
     }
 
     this.isInitialized = true;
+    await indexer.syncAllFromChain();
     this.startEventMonitoring();
   }
 
@@ -119,59 +121,51 @@ export class AgentFleet {
   }
 
   private startEventMonitoring() {
-    console.log('[Fleet] Subscribing to Arc L1 contract events...');
+    console.log('[Fleet] Starting active Arc L1 contract polling monitor...');
 
-    // 1. Watch TenderCreated
-    publicClient.watchContractEvent({
-      address: CONFIG.TENDER_ADDRESS,
-      abi: AGENT_TENDER_ABI,
-      eventName: 'TenderCreated',
-      onLogs: (logs) => {
-        for (const log of logs) {
-          const args = (log as any).args;
-          this.handleTenderCreated(args, log.transactionHash ?? undefined);
-        }
-      },
-    });
+    // Poll Arc L1 for new tenders and state changes
+    setInterval(async () => {
+      try {
+        if (!CONFIG.TENDER_ADDRESS) return;
+        const total = Number(
+          (await publicClient.readContract({
+            address: CONFIG.TENDER_ADDRESS,
+            abi: AGENT_TENDER_ABI,
+            functionName: 'tenderCounter',
+          })) as bigint
+        );
 
-    // 2. Watch NewLowestBid
-    publicClient.watchContractEvent({
-      address: CONFIG.TENDER_ADDRESS,
-      abi: AGENT_TENDER_ABI,
-      eventName: 'NewLowestBid',
-      onLogs: (logs) => {
-        for (const log of logs) {
-          const args = (log as any).args;
-          this.handleNewLowestBid(args, log.transactionHash ?? undefined);
+        if (this.lastPolledCounter === 0) {
+          this.lastPolledCounter = total;
+          return;
         }
-      },
-    });
 
-    // 3. Watch DeliverySubmitted
-    publicClient.watchContractEvent({
-      address: CONFIG.TENDER_ADDRESS,
-      abi: AGENT_TENDER_ABI,
-      eventName: 'DeliverySubmitted',
-      onLogs: (logs) => {
-        for (const log of logs) {
-          const args = (log as any).args;
-          this.handleDeliverySubmitted(args);
-        }
-      },
-    });
+        if (total > this.lastPolledCounter) {
+          for (let i = this.lastPolledCounter + 1; i <= total; i++) {
+            const raw = (await publicClient.readContract({
+              address: CONFIG.TENDER_ADDRESS,
+              abi: AGENT_TENDER_ABI,
+              functionName: 'getTender',
+              args: [BigInt(i)],
+            })) as any;
 
-    // 4. Watch TenderSettled
-    publicClient.watchContractEvent({
-      address: CONFIG.TENDER_ADDRESS,
-      abi: AGENT_TENDER_ABI,
-      eventName: 'TenderSettled',
-      onLogs: (logs) => {
-        for (const log of logs) {
-          const args = (log as any).args;
-          this.handleTenderSettled(args);
+            if (raw && Number(raw.id) !== 0) {
+              await this.handleTenderCreated({
+                tenderId: raw.id,
+                creator: raw.creator,
+                maxBudget: raw.maxBudget,
+                biddingDeadline: raw.biddingDeadline,
+                executionDeadline: raw.executionDeadline,
+                taskMetadataURI: raw.taskMetadataURI,
+              });
+            }
+          }
+          this.lastPolledCounter = total;
         }
-      },
-    });
+      } catch (err: any) {
+        // quiet retry
+      }
+    }, 2500);
   }
 
   public async handleTenderCreated(args: any, txHash?: string) {
@@ -352,9 +346,15 @@ export class AgentFleet {
       return;
     }
 
-    const targetBid = priceCalculator(current);
+    const isFirstBid = lowestBidder === '0x0000000000000000000000000000000000000000';
+    let targetBid: number | null = null;
+    if (isFirstBid) {
+      targetBid = current;
+    } else {
+      targetBid = priceCalculator(current);
+    }
 
-    if (targetBid === null || targetBid >= current) {
+    if (targetBid === null || (!isFirstBid && targetBid >= current)) {
       indexer.addLog({
         agentId: agent.profile.id,
         agentName: agent.profile.name,
@@ -397,6 +397,7 @@ export class AgentFleet {
           functionName: 'submitBid',
           args: [BigInt(tenderId), bidRaw],
         });
+        await publicClient.waitForTransactionReceipt({ hash: txHash as any });
         onChainSucceeded = true;
       } catch (err: any) {
         const reason = err.shortMessage || err.message || '';
@@ -619,7 +620,7 @@ export class AgentFleet {
   }
 
   public startAutonomousActivityLoop() {
-    console.log('[Fleet] Starting Autonomous Tender Broadcaster & Fulfillment Swarm...');
+    console.log('[Fleet] Starting Autonomous Tender Broadcaster & Fulfillment Swarm (1 hour interval, 0.001 USDC)...');
     const taskPrompts = [
       'Formal verification of Arc StakeVault arithmetic bounds and reentrancy invariants',
       'High-frequency triangular arbitrage pathway detection across Arc micro-USDC routing',
@@ -630,12 +631,11 @@ export class AgentFleet {
     ];
 
     let count = 0;
-    setInterval(async () => {
+    const executeAutonomousTender = async () => {
       try {
         count++;
         const randomPrompt = taskPrompts[Math.floor(Math.random() * taskPrompts.length)];
-        const budgetOptions = [0.005, 0.006, 0.008, 0.01];
-        const budgetUSDC = budgetOptions[Math.floor(Math.random() * budgetOptions.length)];
+        const budgetUSDC = 0.001;
         const budgetRaw = toUSDC(budgetUSDC);
 
         const deployerClient = getWalletClient(CONFIG.DEPLOYER_PRIVATE_KEY);
@@ -652,6 +652,24 @@ export class AgentFleet {
           })) as bigint;
 
           if (nativeBal >= BigInt(3_000_000_000_000_000) && usdcBal >= budgetRaw) {
+            // Check allowance
+            const allowance = (await publicClient.readContract({
+              address: CONFIG.USDC_ADDRESS,
+              abi: USDC_ABI,
+              functionName: 'allowance',
+              args: [deployerAddr, CONFIG.TENDER_ADDRESS],
+            })) as bigint;
+
+            if (allowance < budgetRaw) {
+              const appTx = await deployerClient.writeContract({
+                address: CONFIG.USDC_ADDRESS,
+                abi: USDC_ABI,
+                functionName: 'approve',
+                args: [CONFIG.TENDER_ADDRESS, BigInt('115792089237316195423570985008687907853269984665640564039457584007913129639935')],
+              });
+              await publicClient.waitForTransactionReceipt({ hash: appTx });
+            }
+
             const txHash = await deployerClient.writeContract({
               address: CONFIG.TENDER_ADDRESS,
               abi: AGENT_TENDER_ABI,
@@ -659,14 +677,35 @@ export class AgentFleet {
               args: [randomPrompt, budgetRaw, BigInt(35), BigInt(45)],
             });
             console.log(`[Autonomous Order] Real on-chain tender created: ${txHash}`);
+            await publicClient.waitForTransactionReceipt({ hash: txHash as any });
+
+            const newCount = Number(
+              (await publicClient.readContract({
+                address: CONFIG.TENDER_ADDRESS,
+                abi: AGENT_TENDER_ABI,
+                functionName: 'tenderCounter',
+              })) as bigint
+            );
+
+            const nowSec = Math.floor(Date.now() / 1000);
+            await this.handleTenderCreated({
+              tenderId: BigInt(newCount),
+              creator: deployerAddr,
+              maxBudget: budgetRaw,
+              biddingDeadline: BigInt(nowSec + 35),
+              executionDeadline: BigInt(nowSec + 80),
+              taskMetadataURI: randomPrompt,
+            }, txHash);
+
+            this.lastPolledCounter = newCount;
             onChainBroadcast = true;
           }
-        } catch {
-          // Fall through to automated swarm task
+        } catch (chainErr: any) {
+          console.warn(`[Autonomous Order] On-chain broadcast attempted: ${chainErr?.message || chainErr}`);
         }
 
         if (!onChainBroadcast) {
-          const tenderId = 200 + count;
+          const tenderId = 300 + count;
           const nowSec = Math.floor(Date.now() / 1000);
           console.log(`[Autonomous Order] Swarm Bot broadcast tender #${tenderId}: "${randomPrompt.substring(0, 35)}..." (${budgetUSDC} USDC)`);
           
@@ -682,7 +721,15 @@ export class AgentFleet {
       } catch (err: any) {
         console.warn(`[Autonomous Order] Tick warning: ${err.message}`);
       }
-    }, 35000);
+    };
+
+    // First autonomous order 5s after startup
+    setTimeout(() => {
+      executeAutonomousTender();
+    }, 5000);
+
+    // Run every 1 hour (3600 * 1000 ms)
+    setInterval(executeAutonomousTender, 3600 * 1000);
   }
 }
 

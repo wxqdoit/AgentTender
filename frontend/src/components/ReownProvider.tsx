@@ -25,16 +25,16 @@ const projectId =
 
 // Default to configured network
 const configuredNetwork =
-  CONFIG.CHAIN_ID === 5042002
-    ? arcTestnet
-    : CONFIG.CHAIN_ID === 5042
+  CONFIG.CHAIN_ID === 5042
     ? arc
+    : CONFIG.CHAIN_ID === 5042002
+    ? arcTestnet
     : arcDevnet;
 
 // Wagmi adapter with official Arc Testnet (5042002), Arc Mainnet (5042) and local Arc Devnet
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks: [arcTestnet, arc, arcDevnet],
+  networks: [arc, arcTestnet, arcDevnet],
   connectors: [injected()],
   transports: {
     [arcTestnet.id]: http(CONFIG.RPC_URL || 'https://rpc.testnet.arc.network'),
@@ -46,7 +46,7 @@ export const wagmiAdapter = new WagmiAdapter({
 // AppKit modal instance
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [arcTestnet, arc, arcDevnet],
+  networks: [arc, arcTestnet, arcDevnet],
   defaultNetwork: configuredNetwork,
   projectId,
   metadata: {

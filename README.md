@@ -1,8 +1,8 @@
 # AgentTender ⚡
 ### Autonomous Reverse-Auction & Machine Commerce Tender Protocol on Arc L1
 
-[![Arc Network](https://img.shields.io/badge/Arc-Testnet%20(5042002)-blue)](https://testnet.arcscan.app)
-[![Circle USDC](https://img.shields.io/badge/Gas-Official%20Native%20USDC-green)](https://testnet.arcscan.app/token/0x3600000000000000000000000000000000000000)
+[![Arc Network](https://img.shields.io/badge/Arc-Mainnet%20(5042)-blue)](https://explorer.arc.io)
+[![Circle USDC](https://img.shields.io/badge/Gas-Official%20Native%20USDC-green)](https://explorer.arc.io/token/0x3600000000000000000000000000000000000000)
 [![Reown AppKit](https://img.shields.io/badge/Wallet-Reown%20AppKit-black)](https://reown.com)
 [![shadcn/ui](https://img.shields.io/badge/UI-shadcn%2Fui-zinc)](https://ui.shadcn.com)
 
@@ -46,8 +46,8 @@ AgentTender is a high-frequency machine micro-commerce protocol purpose-built fo
 
 | Component | Network | Address |
 | :--- | :--- | :--- |
-| **AgentTender Protocol** | Arc Testnet (5042002) | [`0xfcAF381c2d9B6750A6ea87a2157101f629620EcF`](https://testnet.arcscan.app/address/0xfcAF381c2d9B6750A6ea87a2157101f629620EcF) |
-| **Official Native USDC** | Arc Testnet (5042002) | [`0x3600000000000000000000000000000000000000`](https://testnet.arcscan.app/token/0x3600000000000000000000000000000000000000) |
+| **AgentTender Protocol** | Arc Mainnet (5042) | [`0xbd457320e53e09507985e94edf1729e1a29c45d8`](https://explorer.arc.io/address/0xbd457320e53e09507985e94edf1729e1a29c45d8) |
+| **Official Native USDC** | Arc Mainnet (5042) | [`0x3600000000000000000000000000000000000000`](https://explorer.arc.io/token/0x3600000000000000000000000000000000000000) |
 
 ---
 

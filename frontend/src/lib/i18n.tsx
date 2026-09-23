@@ -16,7 +16,7 @@ export const DICTIONARY = {
     nav_docs: 'Protocol Spec',
 
     // Network & Account
-    network_arc: 'Arc Testnet',
+    network_arc: 'Arc Mainnet',
     block: 'Block',
     gas_native: 'Gas: USDC',
     faucet_btn: 'Official Faucet ↗',
@@ -33,7 +33,7 @@ export const DICTIONARY = {
     faucet_link: 'Get Testnet USDC (Faucet)',
     copy_address: 'Copy Address',
     address_copied: 'Address Copied',
-    view_explorer: 'View on ArcScan ↗',
+    view_explorer: 'View on Explorer ↗',
     manage_wallet: 'Manage in Reown Modal',
     refresh_balance: 'Refresh Balance',
 
@@ -286,7 +286,7 @@ export const DICTIONARY = {
     nav_docs: '协议规范',
 
     // Network & Account
-    network_arc: 'Arc 测试网',
+    network_arc: 'Arc 主网',
     block: '区块',
     gas_native: 'Gas: USDC',
     faucet_btn: '官方领水 ↗',
@@ -303,7 +303,7 @@ export const DICTIONARY = {
     faucet_link: '官方领水 (USDC Faucet) ↗',
     copy_address: '复制完整地址',
     address_copied: '地址已复制',
-    view_explorer: '在 ArcScan 浏览器查看 ↗',
+    view_explorer: '在区块链浏览器查看 ↗',
     manage_wallet: '管理钱包 (Reown)',
     refresh_balance: '刷新余额',
 
